@@ -1,0 +1,11 @@
+*.py[co]
+
+# Virtualenv
+env
+
+# pip installer log
+pip-log.txt
+
+
+# MacOSX
+.DS_Store
