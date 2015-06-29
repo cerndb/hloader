@@ -2,10 +2,18 @@ import os
 
 class Config(object):
     DEBUG = False
-    ORACLE_DATABASE_URI = os.environ.get('ORACLE_DATABASE_URI', None)
+    try:
+        ORACLE_DATABASE_URI = os.environ['ORACLE_DATABASE_URI']
+    except KeyError:
+        print "Error: ORACLE_DATABASE_URI environment variable has " \
+              "not been set"
 
 class ProductionConfig(Config):
-    SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI', None)
+    try:
+        SQLALCHEMY_DATABASE_URI = os.environ['SQLALCHEMY_DATABASE_URI']
+    except KeyError:
+        print "Error: SQLALCHEMY_DATABASE_URI environment variable has " \
+              "not been set"
 
 class DevelopmentConfig(Config):
     DEBUG = True
