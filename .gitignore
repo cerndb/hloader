@@ -9,3 +9,5 @@ pip-log.txt
 
 # MacOSX
 .DS_Store
+
+.idea
