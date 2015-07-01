@@ -1,7 +1,4 @@
-from hloader.db.IDatabaseConnector import IDatabaseConnector
-
-
-class PostgreSQLConnector(IDatabaseConnector):
+class PostgreSQLConnector:
     def get_servers(self):
         pass
 
