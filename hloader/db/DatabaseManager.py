@@ -11,8 +11,8 @@ class DatabaseManager:
     _connector = None
 
     def __init__(self, connection_string=""):
+        super().__init__(self)
         _connector = PostgreSQLConnector(connection_string)
-        pass
 
     @staticmethod
     def get_servers():
