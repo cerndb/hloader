@@ -3,6 +3,8 @@ import os
 import sys
 import argparse
 
+from db.DatabaseManager import DatabaseManager
+
 app = Flask(__name__)
 
 @app.route('/api/v1')
@@ -36,4 +38,5 @@ if args['check_sanity'] == True:
     pass
 
 if args['run'] == True:
+    DatabaseManager(args['postgres_host'], args['postgres_dbname'], args['postgres_user'], args['postgres_password'])
     app.run(debug=args['debug'], use_reloader=args['use_reloader'])
