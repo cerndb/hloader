@@ -1,9 +1,9 @@
 import os
 import socket
 import traceback
-import sys
 
 import paramiko
+from paramiko.py3compat import u
 from paramiko.ssh_exception import PasswordRequiredException
 
 from hloader.transfer.ITransferRunner import ITransferRunner
@@ -32,32 +32,54 @@ class SSHRunner(ITransferRunner):
                 22,  # TODO might be different
                 username,
                 gss_auth=True,  # Using Kerberos authentication
-                look_for_keys=False
+                # look_for_keys=False
             )
 
             channel = client.invoke_shell()
 
             # start the transfer
             channel.send(self.sqoop_command)
+            channel.send('\x0d')
+
+            # stdin, stdout, stderr = client.exec_command(self.sqoop_command)
 
             # monitor the transfer
-            while True:
-                output = channel.recv(1024)
-                if (output == 0):
-                    break
-                sys.stdout.write(output)
-                sys.stdout.flush()
+            lines = []
+            output = ""
+
+            while not channel.exit_status_ready():
+
+                if channel.recv_ready():
+                    stdout = channel.recv(1)
+                    output += u(stdout)
+
+                    if len(output):
+                        split = output.split('\r\n')
+
+                        if split[:-1]:
+                            lines.append(split[:-1])
+                            for line in split[:-1]:
+                                print(line)
+                        output = split[-1]
+
+                        # print('output: ' + output)
+
+                        if "Enter password:" in output:
+                            lines.append(output)
+                            output = ''
+
+                            channel.send(os.environ.get("HLOADER_ORACLE_READER_PASS", ""))
+                            channel.send('\x0d')
 
             try:
-                channel.close()
+                # channel.close()
                 client.close()
             except Exception:
                 traceback.print_exc()
 
         except PasswordRequiredException:
             # TODO handle Kerberos not initialized exception
-            sys.stdout.write("Kerberos is not initialized")
-            sys.stdout.flush()
+            print("Kerberos is not initialized")
             traceback.print_exc()
         except Exception:
             traceback.print_exc()
