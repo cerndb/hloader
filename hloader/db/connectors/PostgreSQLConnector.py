@@ -12,9 +12,9 @@ class PostgreSQLConnector:
         self.cursor.execute('SHOW server_version')
         version = self.cursor.fetchone()[0]
         print "Successfully connected to the PostgreSQL Server (%s)"%(version)
-        print "Host: ", host
-        print "Database: ", dbname
-        print "User: ", user
+        print "Host:", host
+        print "Database:", dbname
+        print "User:", user
 
 
     def get_servers(self):
