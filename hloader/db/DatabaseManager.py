@@ -1,4 +1,7 @@
-from db.connectors.PostgreSQLConnector import PostgreSQLConnector
+from hloader.db.connectors.PostgreSQLConnector import PostgreSQLConnector
+
+__author__ = 'dstein'
+
 
 class DatabaseManager:
     """
@@ -7,8 +10,9 @@ class DatabaseManager:
 
     _connector = None
 
-    def __init__(self, host, dbname, user, password):
-        _connector = PostgreSQLConnector(host, dbname, user, password)
+    def __init__(self, connection_string=""):
+        super().__init__(self)
+        _connector = PostgreSQLConnector(connection_string)
 
     @staticmethod
     def get_servers():
