@@ -1,10 +1,9 @@
 from flask import Flask
 import os
+import sys
 import argparse
 
 app = Flask(__name__)
-
-db = SQLAlchemy(app)
 
 @app.route('/api/v1')
 def api_v1_index():
@@ -28,6 +27,10 @@ parser.add_argument('--postgres-user', action='store', help='Specify PostgreSQL 
 parser.add_argument('--postgres-password', action='store', help='Specify PostgreSQL password')
 
 args = vars(parser.parse_args())
+
+
+if len(sys.argv) == 1:
+    parser.print_help()
 
 if args['check_sanity'] == True:
     pass
