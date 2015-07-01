@@ -1,32 +1,37 @@
 from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
 import os
+import argparse
 
 app = Flask(__name__)
 
-# Perform a shell export for HLOADER_CONFIG to indicate the type of
-# configuration. See config.py for details about each configuration.
-# Available options are:
-#   * config.ProductionConfig (default)
-#   * config.DevelopmentConfig
-#
-# Example: export HLOADER_CONFIG="config.DevelopmentConfig"
-
-hloader_config = os.environ.get('HLOADER_CONFIG')
-if hloader_config is not None:
-    app.config.from_object(hloader_config)
-else:
-    print "HLOADER_CONFIG environment variable not set. Using \
-          'config.ProductionConfig' as default"
-    app.config.from_object(config.ProductionConfig)
-
 db = SQLAlchemy(app)
-
 
 @app.route('/api/v1')
 def api_v1_index():
     return "This is the landing page for the HLoader REST API v1"
 
 
-if __name__ == '__main__':
-    app.run()
+###############################################################################
+#                           argparse configuration                            #
+###############################################################################
+
+parser = argparse.ArgumentParser(description='CERN HLoader')
+
+parser.add_argument('-c', '--check-sanity', action='store_true', help='Check the sanity of the execution environment')
+parser.add_argument('-r', '--run', help='Run the Flask microserver', action='store_true')
+parser.add_argument('--debug', help='Enable debugging mode', action='store_true', default=False)
+parser.add_argument('--use-reloader', action='store_true', help='Use reloader to run Flask microserver', default=False)
+parser.add_argument('--oracledb-url', action='store', help='Specify Oracle DB URL')
+parser.add_argument('--postgres-host', action='store', help='Specify PostgreSQL host', default='localhost')
+parser.add_argument('--postgres-dbname', action='store', help='Specify PostgreSQL database name', default='hloader-db')
+parser.add_argument('--postgres-user', action='store', help='Specify PostgreSQL username', default='hluser')
+parser.add_argument('--postgres-password', action='store', help='Specify PostgreSQL password')
+
+args = vars(parser.parse_args())
+
+if args['check_sanity'] == True:
+    pass
+
+if args['run'] == True:
+    app.run(debug=args['debug'], use_reloader=args['use_reloader'])
