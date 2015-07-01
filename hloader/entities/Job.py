@@ -1,3 +1,4 @@
+from hloader.entities.HadoopCluster import HadoopCluster
 from hloader.entities.OracleServer import OracleServer
 
 __author__ = 'dstein'
@@ -35,3 +36,12 @@ class Job(object):
         server.server_name = "d3r.cern.ch"
 
         return server
+
+    def get_destination_cluster(self) -> HadoopCluster:
+        # TODO temporary solution
+        # raise Exception("Not implemented.")
+
+        cluster = HadoopCluster()
+        cluster.cluster_address = "itrac925"
+
+        return cluster

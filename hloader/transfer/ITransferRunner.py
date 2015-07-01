@@ -2,11 +2,12 @@ import logging
 import os
 
 from hloader.entities.Job import Job
+import threading
 
 __author__ = 'dstein'
 
 
-class ITransferRunner(object):
+class ITransferRunner(threading.Thread):
     """
     :type _job: Job
     """
@@ -14,6 +15,13 @@ class ITransferRunner(object):
     def __init__(self, job: Job):
         super().__init__()
         self._job = job
+
+    def run(self):
+        # create a Transfer entity for the job
+        # prepare the sqoop command
+        # start the transfer
+        #  monitor the transfer
+        pass
 
     @property
     def sqoop_command(self):
@@ -52,7 +60,7 @@ class ITransferRunner(object):
 
         # --username <username>
         #         Set authentication username
-        username = os.environ.get('HLOADER_ORACLE_READER_USER', "")
+        username = os.environ.get("HLOADER_ORACLE_READER_USER", "")
         command.append("--username")
         command.append(username)
 
