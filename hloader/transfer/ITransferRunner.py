@@ -1,8 +1,8 @@
 import logging
 import os
+import threading
 
 from hloader.entities.Job import Job
-import threading
 
 __author__ = 'dstein'
 
@@ -13,8 +13,8 @@ class ITransferRunner(threading.Thread):
     """
 
     def __init__(self, job: Job):
-        super().__init__()
         self._job = job
+        threading.Thread.__init__(self)
 
     def run(self):
         # create a Transfer entity for the job
@@ -140,6 +140,14 @@ class ITransferRunner(threading.Thread):
 
         # --target-dir <dir>
         #         HDFS destination dir
+        command.append("--target-dir")
+        # TODO put the right base path here, maybe check the target directory
+        command.append(
+            "/user/playground/{dbname}/{tablename}/{relative}".format(
+                dbname=self._job.source_database_name,
+                tablename=self._job.source_table_name,
+                relative=self._job.destination_path)
+        )
 
         # --warehouse-dir <dir>
         #         HDFS parent for table destination
@@ -158,6 +166,9 @@ class ITransferRunner(threading.Thread):
 
         # --null-non-string <null-string>
         #         The string to be written for a null value for non-string columns
+
+        # exit after running the command
+        command.append("; exit")
 
         print(command)
 
