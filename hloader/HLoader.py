@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, Response, json
 import os
 import sys
 import argparse
@@ -10,6 +10,10 @@ app = Flask(__name__)
 @app.route('/api/v1')
 def api_v1_index():
     return "This is the landing page for the HLoader REST API v1"
+
+@app.route('/api/v1/hl_servers')
+def api_v1_hl_servers():
+    return Response(json.dumps(connector.get_servers(), indent=4),  mimetype='application/json')
 
 
 ###############################################################################
@@ -38,5 +42,5 @@ if args['check_sanity'] == True:
     pass
 
 if args['run'] == True:
-    DatabaseManager(args['postgres_host'], args['postgres_dbname'], args['postgres_user'], args['postgres_password'])
+    connector = DatabaseManager(args['postgres_host'], args['postgres_dbname'], args['postgres_user'], args['postgres_password'])
     app.run(debug=args['debug'], use_reloader=args['use_reloader'])

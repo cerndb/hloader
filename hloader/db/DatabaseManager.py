@@ -5,14 +5,11 @@ class DatabaseManager:
     Database manager class, that handles the database connection, the driver, and handles the calls for the implementations.
     """
 
-    _connector = None
-
     def __init__(self, host, dbname, user, password):
-        _connector = PostgreSQLConnector(host, dbname, user, password)
+        self._connector = PostgreSQLConnector(host, dbname, user, password)
 
-    @staticmethod
-    def get_servers():
-        return DatabaseManager._connector.get_servers()
+    def get_servers(self):
+        return self._connector.get_servers()
 
     @staticmethod
     def get_clusters():

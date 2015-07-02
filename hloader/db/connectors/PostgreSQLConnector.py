@@ -1,4 +1,5 @@
 import psycopg2
+import psycopg2.extras
 import sys
 
 class PostgreSQLConnector:
@@ -8,9 +9,9 @@ class PostgreSQLConnector:
         except:
             print "Unable to connect to the Postgres server"
             sys.exit()
-        self.cursor = self.connection.cursor()
+        self.cursor = self.connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         self.cursor.execute('SHOW server_version')
-        version = self.cursor.fetchone()[0]
+        version = self.cursor.fetchone()['server_version']
         print "Successfully connected to the PostgreSQL Server (%s)"%(version)
         print "Host:", host
         print "Database:", dbname
@@ -18,7 +19,9 @@ class PostgreSQLConnector:
 
 
     def get_servers(self):
-        pass
+        self.cursor.execute('SELECT * FROM HL_SERVERS')
+        servers = self.cursor.fetchall()
+        return servers
 
     def get_clusters(self):
         pass
