@@ -1,4 +1,4 @@
-from flask import Flask, Response, json
+from flask import Flask, Response, json, redirect
 import os
 import sys
 import argparse
@@ -6,6 +6,15 @@ import argparse
 from db.DatabaseManager import DatabaseManager
 
 app = Flask(__name__)
+
+@app.route('/api')
+def api_index():
+    # This route must be redirected to a suitable version of the HLoader API
+    # In future the API may well be extended/changed, and backward
+    # compatibility will guarantee that things don't break.
+
+    # Redirect to HLoader API v1
+    return redirect('/api/v1', code=302)
 
 @app.route('/api/v1')
 def api_v1_index():
