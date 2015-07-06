@@ -1,0 +1,18 @@
+{
+  "type": "application",
+  "name": "hloader",
+  "username": "",
+  "ngVersion": "~1.4.0",
+  "ngModules": [
+    "animate",
+    "cookies",
+    "i18n",
+    "route",
+    "sanitize"
+  ],
+  "license": "MIT",
+  "htmlPreprocessor": "none",
+  "jsPreprocessor": "none",
+  "cssPreprocessor": "sass",
+  "module": "Hloader"
+}

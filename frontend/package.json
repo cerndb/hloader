@@ -1,0 +1,20 @@
+{
+  "name": "hloader",
+  "version": "0.1.0",
+  "description": "Yet another amazing AngularJS app!",
+  "keywords": [
+    "angular"
+  ],
+   "licenses": [
+    {
+      "type": "MIT"
+    }
+  ],
+  "dependencies": {},
+  "devDependencies": {
+    "gulp": "git://github.com/gulpjs/gulp.git#4.0",
+    "ng-factory": "^1.0",
+    "undertaker-app-tasks": "^0.2.6",
+    "factory-angular-channels": "^0.7.1"
+  }
+}

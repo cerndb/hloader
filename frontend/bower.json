@@ -1,0 +1,25 @@
+{
+  "name": "hloader",
+  "version": "0.1.0",
+  "description": "Yet another amazing AngularJS app!",
+  "keywords": [
+    "angular"
+  ],
+   "licenses": [
+    {
+      "type": "MIT"
+    }
+  ],
+  "dependencies": {
+    "bootstrap": "^3.3",
+    "font-awesome": "^4.3",
+    "angular-strap": "^2.2",
+    "angular-motion": "^0.4",
+    "angular-animate": "~1.4.0",
+    "angular-cookies": "~1.4.0",
+    "angular-i18n": "~1.4.0",
+    "angular-route": "~1.4.0",
+    "angular-sanitize": "~1.4.0",
+    "angular": "~1.4.0"
+  }
+}
