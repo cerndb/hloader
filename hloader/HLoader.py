@@ -37,8 +37,9 @@ parser.add_argument('--debug', help='Enable debugging mode', action='store_true'
 parser.add_argument('--use-reloader', action='store_true', help='Use reloader to run Flask microserver', default=False)
 parser.add_argument('--oracledb-url', action='store', help='Specify Oracle DB URL')
 parser.add_argument('--postgres-host', action='store', help='Specify PostgreSQL host', default='localhost')
-parser.add_argument('--postgres-dbname', action='store', help='Specify PostgreSQL database name', default='hloader-db')
-parser.add_argument('--postgres-user', action='store', help='Specify PostgreSQL username', default='hluser')
+parser.add_argument('--postgres-dbname', action='store', help='Specify PostgreSQL database name', default='hloader')
+parser.add_argument('--postgres-port', action='store', help='Specify PostgreSQL port number', default='5432')
+parser.add_argument('--postgres-user', action='store', help='Specify PostgreSQL username', default='hloader')
 parser.add_argument('--postgres-password', action='store', help='Specify PostgreSQL password')
 
 args = vars(parser.parse_args())
@@ -51,5 +52,8 @@ if args['check_sanity'] == True:
     pass
 
 if args['run'] == True:
-    connector = DatabaseManager(args['postgres_host'], args['postgres_dbname'], args['postgres_user'], args['postgres_password'])
+    connector = DatabaseManager(
+        args['postgres_host'], args['postgres_dbname'],	args['postgres_port'],
+        args['postgres_user'], args['postgres_password']
+    )
     app.run(debug=args['debug'], use_reloader=args['use_reloader'])

@@ -3,14 +3,21 @@ import psycopg2.extras
 import sys
 
 class PostgreSQLConnector:
-    def __init__(self, host, dbname, user, password):
+    def __init__(self, host, dbname, port, user, password):
         try:
-            self.connection = psycopg2.connect("host='%s' dbname='%s' user='%s' password='%s'"%(host, dbname, user, password))
+            self.connection = psycopg2.connect(
+                "host='%s' dbname='%s' port='%s' user='%s' \
+                password='%s'"%(host, dbname, port, user, password))
+            )
             self.connection.autocommit = True
         except:
             print "Unable to connect to the Postgres server"
             sys.exit()
-        self.cursor = self.connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        self.cursor = self.connection.cursor(
+            cursor_factory=psycopg2.extras.RealDictCursor
+        )
+
         self.cursor.execute('SHOW server_version')
         version = self.cursor.fetchone()['server_version']
         print "Successfully connected to the PostgreSQL Server (%s)"%(version)
