@@ -11,5 +11,7 @@ class Transfer:
     transfer_last_update = None
 
     class Status(Enum):
+        WAITING = "waiting"
+        STARTED = "started"
+        SUCCEEDED = "succeeded"
         # TODO collect status values
-        pass
