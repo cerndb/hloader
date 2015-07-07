@@ -22,7 +22,7 @@ def api_v1_index():
 
 @app.route('/api/v1/hl_servers')
 def api_v1_hl_servers():
-    return Response(json.dumps(connector.get_servers(), indent=4),  mimetype='application/json')
+    return Response(json.dumps(connector.get_servers(), indent=4), mimetype='application/json')
 
 
 ###############################################################################

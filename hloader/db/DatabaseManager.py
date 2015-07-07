@@ -11,6 +11,9 @@ class DatabaseManager:
     def get_servers(self):
         return self._connector.get_servers()
 
+    def add_server(self, address, port, name):
+        return self._connector.add_server(address, port, name)
+
     @staticmethod
     def get_clusters():
         return DatabaseManager._connector.get_clusters()

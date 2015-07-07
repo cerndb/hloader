@@ -6,6 +6,7 @@ class PostgreSQLConnector:
     def __init__(self, host, dbname, user, password):
         try:
             self.connection = psycopg2.connect("host='%s' dbname='%s' user='%s' password='%s'"%(host, dbname, user, password))
+            self.connection.autocommit = True
         except:
             print "Unable to connect to the Postgres server"
             sys.exit()
@@ -22,6 +23,21 @@ class PostgreSQLConnector:
         self.cursor.execute('SELECT * FROM HL_SERVERS')
         servers = self.cursor.fetchall()
         return servers
+
+    def add_server(self, address, port, name):
+        try:
+            self.cursor.execute(
+            """INSERT INTO HL_SERVERS
+                    (server_address, server_port, server_name)
+                VALUES
+                    (%s, %s, %s)
+                RETURNING server_id""", (address, port, name))
+
+        except:
+            print("Unable to add new server to Postgres table HL_SERVERS")
+            sys.exit()
+
+        return self.cursor.fetchone()['server_id']
 
     def get_clusters(self):
         pass
