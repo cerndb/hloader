@@ -4,6 +4,7 @@ import sys
 import argparse
 
 from db.DatabaseManager import DatabaseManager
+from entities.OracleServer import OracleServer
 
 app = Flask(__name__)
 

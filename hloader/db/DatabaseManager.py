@@ -14,8 +14,8 @@ class DatabaseManager:
     def get_servers(self):
         return self._connector.get_servers()
 
-    def add_server(self, address, port, name):
-        return self._connector.add_server(address, port, name)
+    def add_server(self, oracle_server):
+        return self._connector.add_server(oracle_server)
 
     @staticmethod
     def get_clusters():

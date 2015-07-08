@@ -6,8 +6,11 @@ class PostgreSQLConnector:
     def __init__(self, host, dbname, port, user, password):
         try:
             self.connection = psycopg2.connect(
-                "host='%s' dbname='%s' port='%s' user='%s' \
-                password='%s'"%(host, dbname, port, user, password))
+                host=host,
+                database=dbname,
+                port=port,
+                user=user,
+                password=password
             )
             self.connection.autocommit = True
         except:
@@ -31,14 +34,20 @@ class PostgreSQLConnector:
         servers = self.cursor.fetchall()
         return servers
 
-    def add_server(self, address, port, name):
+    def add_server(self, oracle_server):
+        """
+        Add a new instance of @OracleServer into HL_SERVERS
+        :return: server_id of the new instance of @OracleServer
+        """
         try:
             self.cursor.execute(
             """INSERT INTO HL_SERVERS
                     (server_address, server_port, server_name)
                 VALUES
                     (%s, %s, %s)
-                RETURNING server_id""", (address, port, name))
+                RETURNING server_id""", (oracle_server.server_address,
+					oracle_server.server_port, oracle_server.server_name)
+            )
 
         except:
             print("Unable to add new server to Postgres table HL_SERVERS")
