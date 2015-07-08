@@ -1,4 +1,4 @@
-from db.connectors.PostgreSQLConnector import PostgreSQLConnector
+from hloader.db.connectors.PostgreSQLConnector import PostgreSQLConnector
 
 class DatabaseManager:
     """

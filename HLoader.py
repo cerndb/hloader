@@ -3,8 +3,8 @@ import os
 import sys
 import argparse
 
-from db.DatabaseManager import DatabaseManager
-from entities.OracleServer import OracleServer
+from hloader.db.DatabaseManager import DatabaseManager
+from hloader.entities.OracleServer import OracleServer
 
 app = Flask(__name__)
 
