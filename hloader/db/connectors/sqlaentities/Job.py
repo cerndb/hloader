@@ -25,6 +25,7 @@ class Job(Base, Job):
     sqoop_incremental_method = Column(String)  # TEXT ,
     sqoop_direct = Column(Boolean, nullable=False)  # INTEGER NOT NULL ,
     update_difference = Column(String)  # INTEGER
+    # TODO integer!
 
     source_server = relationship("hloader.db.connectors.sqlaentities.OracleServer.OracleServer")
     destination_cluster = relationship("hloader.db.connectors.sqlaentities.HadoopCluster.HadoopCluster")

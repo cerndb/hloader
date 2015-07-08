@@ -14,8 +14,9 @@ from hloader.entities.Transfer import Transfer
 
 from hloader.transfer.ITransferRunner import ITransferRunner
 
-RETURN = '\x0d'
 
+RETURN = '\x0d'
+HTML_UPDATE_WAIT_SECONDS = 1
 UPDATE_WAIT_SECONDS = 10
 
 __author__ = 'dstein'
@@ -117,6 +118,7 @@ class SSHRunner(ITransferRunner):
 
         # Monitor the transfer
         # Since the Sqoop command ends with exit, the channel will also quit after the transfer finished.
+        # TODO after the password is sent, the buffer size can be higher (AIMD)
         while not channel.exit_status_ready():
 
             if channel.recv_ready():
@@ -259,7 +261,7 @@ class RESTMonitor(threading.Thread):
                 if response.status_code == 200:
                     if response.text.count("ACCEPTED") > 2:
                         # The response is HTML and not JSON, when the job is only in the ACCEPTED stage.
-                        time.sleep(1)
+                        time.sleep(HTML_UPDATE_WAIT_SECONDS)
                         # TODO nicer handling
                     else:
                         try:
@@ -277,6 +279,8 @@ class RESTMonitor(threading.Thread):
                                 break
                             else:
                                 traceback.print_exc()
+
+                            # TODO what if there is no SUCCEEDED? Load archived log.
                 else:
                     break
 
