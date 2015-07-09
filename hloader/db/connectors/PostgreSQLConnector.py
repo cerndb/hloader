@@ -23,15 +23,24 @@ class PostgreSQLConnector:
 
         self.cursor.execute('SHOW server_version')
         version = self.cursor.fetchone()['server_version']
-        print "Successfully connected to the PostgreSQL Server (%s)"%(version)
-        print "Host:", host
-        print "Database:", dbname
-        print "User:", user
+        print("Successfully connected to the PostgreSQL Server (%s)"%(version))
+        print("Host:", host)
+        print("Database:", dbname)
+        print("User:", user)
 
 
     def get_servers(self):
         self.cursor.execute('SELECT * FROM HL_SERVERS')
         servers = self.cursor.fetchall()
+        return servers
+
+    def get_jobs(self, job_id=None):
+        if job_id is None:
+            self.cursor.execute('SELECT * FROM HL_JOBS')
+            servers = self.cursor.fetchone()
+        else:
+            self.cursor.execute("SELECT * FROM HL_JOBS WHERE job_id='{id}'", (job_id))
+            servers = self.cursor.fetchall()
         return servers
 
     def add_server(self, oracle_server):
