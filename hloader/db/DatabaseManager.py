@@ -1,9 +1,10 @@
 from hloader.db.connectors.PostgreSQLConnector import PostgreSQLConnector
 
+
 class DatabaseManager:
     """
     Database manager class, that handles the database connection, the driver,
-	and handles the calls for the implementations.
+    and handles the calls for the implementations.
     """
 
     def __init__(self, host, dbname, port, user, password):

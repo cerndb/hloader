@@ -6,6 +6,7 @@ from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.executors.pool import ThreadPoolExecutor, ProcessPoolExecutor
 
 from hloader.entities.Transfer import Transfer
+from hloader.entities.Job import Job
 
 
 class APScheduler(object):
@@ -41,8 +42,25 @@ class APScheduler(object):
         self.scheduler.start()
 
 
-def start_transfer(scheduler_instance):
-    _transfer = scheduler_instance.scheduler.add_job(tick, 'interval', seconds=2)
+def start_transfer(aps, job: Job, trigger: str, **kwargs):
+    """
+    Start a new transfer for a given job.
+
+    Accepted values of trigger: [date | interval | cron]
+    Refer to the API reference of APScheduler for details about trigger
+    parameters.
+
+    date: apscheduler.triggers.date
+    interval: apscheduler.triggers.interval
+    cron: apscheduler.triggers.cron
+
+    :param aps: Instance of the class APScheduler
+    :param job: Instance of the Job entity
+    :param trigger: Type of trigger for the transfer
+    :param kwargs: Trigger specific parameters
+    :return: Transfer instance
+    """
+    _transfer = aps.scheduler.add_job(tick, trigger, **kwargs)
     transfer = Transfer(job, _transfer)
 
 
@@ -54,9 +72,9 @@ def tick():
 if __name__ == '__main__':
     # Wait for 5 seconds and start the scheduler
     time.sleep(5)
-    scheduler_instance = APScheduler()
+    aps_obj = APScheduler()
 
-    start_transfer(scheduler_instance)
+    start_transfer(aps_obj, None, 'interval', seconds=2)
     while True:
         # TODO: Fine tune this setting to decrease CPU busy waiting
         time.sleep(60)
