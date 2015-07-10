@@ -18,30 +18,11 @@ class Job(object):
     sqoop_splitting_column = None
     sqoop_incremental_method = None
     sqoop_direct = None
-    update_difference = None
+    start_time = None
+    interval = None
 
     def get_source_server(self) -> OracleServer:
-        """
-        The DB connector should handle getting the connected Oracle Server entity.
-        :return: the connected Oracle Server entity
-        :rtype: OracleServer
-        """
-
-        # TODO temporary solution
-        # raise Exception("Not implemented.")
-        server = OracleServer()
-        server.server_id = 1
-        server.server_address = "d3r-s.cern.ch"
-        server.server_port = 10121
-        server.server_name = "d3r.cern.ch"
-
-        return server
+        raise Exception("Not implemented.")
 
     def get_destination_cluster(self) -> HadoopCluster:
-        # TODO temporary solution
-        # raise Exception("Not implemented.")
-
-        cluster = HadoopCluster()
-        cluster.cluster_address = "itrac925"
-
-        return cluster
+        raise Exception("Not implemented.")

@@ -1,31 +1,27 @@
-from db.connectors.PostgreSQLConnector import PostgreSQLConnector
+from hloader.db.connectors.PostgreSQLAlchemyConnector import PostgreSQLAlchemyConnector
+
 
 class DatabaseManager:
     """
     Database manager class, that handles the database connection, the driver, and handles the calls for the implementations.
     """
 
-    def __init__(self, host, dbname, user, password):
-        self._connector = PostgreSQLConnector(host, dbname, user, password)
+    # Central Oracle connector for authenticating and authorizing the user requests.
+    _auth_oracle_connector = None
 
-    def get_servers(self):
-        return self._connector.get_servers()
-
-    def add_server(self, address, port, name):
-        return self._connector.add_server(address, port, name)
+    # Connector for the PostgreSQL/MongoDB database containing for example the job and transfer entries.
+    _meta_connector = None
 
     @staticmethod
-    def get_clusters():
-        return DatabaseManager._connector.get_clusters()
+    def connect_oracle(address, port, username, password, database):
+        # DatabaseManager._auth_oracle_connector = ...
+        pass
 
     @staticmethod
-    def get_jobs(database="*"):
-        return DatabaseManager._connector.get_jobs(database=database)
+    def connect_meta(type, address, port, username, password, database):
+        DatabaseManager._meta_connector = {
+            "PostgreSQLA": PostgreSQLAlchemyConnector(address, port, username, password, database)
+        }.get(type, None)
 
-    @staticmethod
-    def get_ready_jobs():
-        return DatabaseManager._connector.get_ready_jobs()
+    # ------------------------------------------------------------------------------------------------------------------
 
-    @staticmethod
-    def get_transfers(job="*", state="*", limit="10"):
-        return DatabaseManager._connector.get_transfers(job=job, state=state, limit=limit)

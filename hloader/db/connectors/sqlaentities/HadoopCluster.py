@@ -12,7 +12,6 @@ class HadoopCluster(Base, HadoopCluster):
 
     cluster_id = Column(Integer, autoincrement=True, nullable=False, primary_key=True)  # SERIAL NOT NULL,
     cluster_address = Column(String, nullable=False)  # TEXT NOT NULL ,
-    server_name = Column(String, nullable=False)  # TEXT NOT NULL
-    # TODO cluster name!
+    cluster_name = Column(String, nullable=False)  # TEXT NOT NULL
 
     jobs = relationship("hloader.db.connectors.sqlaentities.Job.Job")

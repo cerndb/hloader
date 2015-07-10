@@ -5,8 +5,9 @@ from hloader.entities.OracleServer import OracleServer
 
 __author__ = 'dstein'
 
-from sqlalchemy import Column, Integer, String, ForeignKey, Boolean
+from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, DateTime, Interval
 from sqlalchemy.orm import relationship
+
 
 class Job(Base, Job):
     __tablename__ = "HL_JOBS"
@@ -24,11 +25,12 @@ class Job(Base, Job):
     sqoop_splitting_column = Column(String)  # TEXT ,
     sqoop_incremental_method = Column(String)  # TEXT ,
     sqoop_direct = Column(Boolean, nullable=False)  # INTEGER NOT NULL ,
-    update_difference = Column(String)  # INTEGER
-    # TODO integer!
+    start_time = Column(DateTime(timezone=True), nullable=False)  # INTEGER NOT NULL,
+    interval = Column(Interval, nullable=False)  # INTEGER NOT NULL
 
     source_server = relationship("hloader.db.connectors.sqlaentities.OracleServer.OracleServer")
     destination_cluster = relationship("hloader.db.connectors.sqlaentities.HadoopCluster.HadoopCluster")
+    transfers = relationship("hloader.db.connectors.sqlaentities.Transfer.Transfer")
 
     def get_source_server(self) -> OracleServer:
         return super().get_source_server()
