@@ -12,8 +12,8 @@ class DatabaseManager:
             host, dbname, port, user, password
         )
 
-    def get_servers(self):
-        return self._connector.get_servers()
+    def get_servers(self, **kwargs):
+        return self._connector.get_servers(**kwargs)
 
     def add_server(self, oracle_server):
         return self._connector.add_server(oracle_server)

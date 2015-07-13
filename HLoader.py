@@ -1,4 +1,4 @@
-from flask import Flask, Response, json, redirect
+from flask import Flask, Response, json, redirect, request
 import os
 import sys
 import argparse
@@ -23,7 +23,15 @@ def api_v1_index():
 
 @app.route('/api/v1/hl_servers')
 def api_v1_hl_servers():
-    return Response(json.dumps(connector.get_servers(), indent=4), mimetype='application/json')
+    s_id = request.args.get('server_id')
+    address = request.args.get('server_address')
+    port = request.args.get('server_port')
+    name = request.args.get('server_name')
+
+    return Response(json.dumps(connector.get_servers(server_id=s_id,
+                                                     server_name=name,
+                                                     server_port=port,
+                                                     server_address=address), indent=4), mimetype='application/json')
 
 
 ###############################################################################
@@ -49,10 +57,10 @@ args = vars(parser.parse_args())
 if len(sys.argv) == 1:
     parser.print_help()
 
-if args['check_sanity'] == True:
+if args['check_sanity']:
     pass
 
-if args['run'] == True:
+if args['run']:
     connector = DatabaseManager(
         args['postgres_host'], args['postgres_dbname'],	args['postgres_port'],
         args['postgres_user'], args['postgres_password']
