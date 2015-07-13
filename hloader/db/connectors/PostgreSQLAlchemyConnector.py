@@ -1,10 +1,10 @@
-from sqlalchemy import create_engine, func, Integer
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import or_, and_
 
 from hloader.db.IDatabaseConnector import IDatabaseConnector
 from hloader.db.connectors.sqlaentities.HadoopCluster import HadoopCluster
 from hloader.db.connectors.sqlaentities.Job import Job
+from hloader.db.connectors.sqlaentities.Log import Log
 from hloader.db.connectors.sqlaentities.OracleServer import OracleServer
 from hloader.db.connectors.sqlaentities.Transfer import Transfer
 from hloader.entities.HadoopCluster import HadoopCluster as HadoopCluster_
@@ -130,38 +130,69 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
     # Inner methods
     # ------------------------------------------------------------------------------------------------------------------
 
-    def get_ready_jobs(self) -> set(Job):
-        """
-        Get every @Job that is ready and enabled to be run. A job is only enabled, if its last transfer was successful
-        (if any), and the time difference since is greater than the user-provided value. Also, it is not not actually
-        running.
-        :return: Set of jobs ready to start.
-        """
-        last_transfer = self._session.query(
-            Transfer.job_id,
-            func.max(Transfer.transfer_start).label("last_transfer")
-        ).group_by(Transfer.job_id).subquery()
+    # def get_ready_jobs(self) -> set(Job):
+    #     """
+    #     Get every @Job that is ready and enabled to be run. A job is only enabled, if its last transfer was successful
+    #     (if any), and the time difference since is greater than the user-provided value. Also, it is not not actually
+    #     running.
+    #     :return: Set of jobs ready to start.
+    #     """
+    #     last_transfer = self._session.query(
+    #         Transfer.job_id,
+    #         func.max(Transfer.transfer_start).label("last_transfer")
+    #     ).group_by(Transfer.job_id).subquery()
+    #
+    #     last_transfer_data = self._session.query(Transfer) \
+    #         .join(last_transfer, Transfer.job_id == last_transfer.c.job_id) \
+    #         .filter(Transfer.transfer_last_update == last_transfer.c.last_transfer).subquery()
+    #
+    #     jobs_last_transfer = self._session.query(Job, last_transfer_data).outerjoin(last_transfer_data) \
+    #         .filter(
+    #         or_(
+    #             and_(
+    #                 last_transfer_data.c.transfer_id == None,
+    #                 Job.start_time < func.now()
+    #             ),
+    #             and_(
+    #                 last_transfer_data.c.transfer_start < func.floor(
+    #                     func.cast((func.now() - last_transfer_data.c.transfer_start), Integer)
+    #                     / Job.interval) * Job.interval + Job.start_time,
+    #                 and_(
+    #                     last_transfer_data.c.transfer_status != "RUNNING",
+    #                     last_transfer_data.c.transfer_status != "FAILED"
+    #                 )
+    #             )
+    #         )).all()
+    #
+    #     return self._session.query(Job).filter(or_(Job.transfers))
 
-        last_transfer_data = self._session.query(Transfer) \
-            .join(last_transfer, Transfer.job_id == last_transfer.c.job_id) \
-            .filter(Transfer.transfer_last_update == last_transfer.c.last_transfer).subquery()
+    def get_log(self, transfer: Transfer, source: str):
+        log = self._session.query(Log).filter(Log.transfer == transfer).filter(Log.log_source == source).one()
+        if not log:
+            log = Log()
+            log.transfer = transfer
+            log.log_source = source
 
-        jobs_last_transfer = self._session.query(Job, last_transfer_data).outerjoin(last_transfer_data) \
-            .filter(
-            or_(
-                and_(
-                    last_transfer_data.c.transfer_id == None,
-                    Job.start_time < func.now()
-                ),
-                and_(
-                    last_transfer_data.c.transfer_start < func.floor(
-                        func.cast((func.now() - last_transfer_data.c.transfer_start), Integer)
-                        / Job.interval) * Job.interval + Job.start_time,
-                    and_(
-                        last_transfer_data.c.transfer_status != "RUNNING",
-                        last_transfer_data.c.transfer_status != "FAILED"
-                    )
-                )
-            )).all()
+        return log
 
-        return self._session.query(Job).filter(or_(Job.transfers))
+    def save_log(self, log:Log):
+        self._session.add(log)
+        self._session.commit()
+
+    def create_transfer(self, job):
+        transfer = Transfer()
+        transfer.job = job
+        self._session.add(transfer)
+
+        self.modify_status(transfer, "PENDING")
+
+        self._session.commit()
+
+    def modify_status(self, transfer: Transfer, status:str):
+
+        transfer.transfer_status = status
+
+        # TODO proper status handling
+        # Create new history entry
+
+        self._session.commit()
