@@ -6,6 +6,35 @@ import argparse
 from hloader.db.DatabaseManager import DatabaseManager
 from hloader.entities.OracleServer import OracleServer
 
+from os import environ
+
+if __name__ == "__main__":
+    # Load configuration
+    # Initialize database connection
+    # Initialize scheduler
+    # Start transfers
+
+    # Load configuration
+
+    # Initialize database connection
+    DBM = DatabaseManager()
+
+    postgre_address = environ.get('POSTGRE_ADDRESS')
+    postgre_port = environ.get('POSTGRE_PORT')
+    postgre_username = environ.get('POSTGRE_USERNAME')
+    postgre_password = environ.get('POSTGRE_PASSWORD')
+    postgre_database = environ.get('POSTGRE_DATABASE')
+
+    if not (postgre_address and postgre_port and postgre_username and postgre_password and postgre_database):
+        raise Exception("Environmental variables are not properly set up.")
+
+    DBM.connect_meta("PostgreSQLA", postgre_address, postgre_port, postgre_username, postgre_password, postgre_database)
+
+    # Initialize scheduler
+
+    # Start transfers
+    pass
+
 app = Flask(__name__)
 
 @app.route('/api')

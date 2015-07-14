@@ -1,3 +1,6 @@
+from abc import abstractmethod
+from abc import ABCMeta
+
 from hloader.entities.HadoopCluster import HadoopCluster
 from hloader.entities.Job import Job
 from hloader.entities.OracleServer import OracleServer
@@ -6,7 +9,7 @@ from hloader.entities.Transfer import Transfer
 __author__ = 'dstein'
 
 
-class IDatabaseConnector:
+class IDatabaseConnector(metaclass=ABCMeta):
     """
     Interface that has to be implemented by every Database Connector transferred by the @DatabaseManager.
     It contains every method stub used by the REST API provider and other Hadoop-connected parts of the software, eg.,
@@ -80,4 +83,18 @@ class IDatabaseConnector:
     # Inner methods
     # ------------------------------------------------------------------------------------------------------------------
 
-    
+    @abstractmethod
+    def get_log(self, transfer, source):
+        pass
+
+    @abstractmethod
+    def modify_status(self, transfer, status):
+        pass
+
+    @abstractmethod
+    def create_transfer(self, job):
+        pass
+
+    @abstractmethod
+    def save_log(self, log):
+        pass
