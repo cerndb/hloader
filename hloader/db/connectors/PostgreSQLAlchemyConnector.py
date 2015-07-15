@@ -12,6 +12,8 @@ from hloader.entities.Job import Job as Job_
 from hloader.entities.OracleServer import OracleServer as OracleServer_
 from hloader.entities.Transfer import Transfer as Transfer_
 
+DEBUG = False
+
 __author__ = 'dstein'
 
 
@@ -37,7 +39,7 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
                 address=address,
                 port=port,
                 database=database
-            ), echo=True)
+            ), echo=DEBUG)
 
         # Test, whether the connection can be made
         try:
@@ -53,14 +55,14 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
     # REST API data source methods
     # ------------------------------------------------------------------------------------------------------------------
 
-    def get_servers(self) -> set(OracleServer_):
+    def get_servers(self) -> [OracleServer_]:
         """
         Get every available @OracleServer that the user could select as a source server.
         :return: Set of available servers.
         """
         return self._session.query(OracleServer).all()
 
-    def get_clusters(self) -> set(HadoopCluster_):
+    def get_clusters(self) -> [HadoopCluster_]:
         """
         Get every available @HadoopCluster that the user could select as the destination cluster.
         :return: Set of available clusters.
@@ -68,9 +70,9 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
         return self._session.query(HadoopCluster).all()
 
     def get_jobs(self,
-                 server: [OracleServer_ | int]=None,
+                 server=None,
                  database: str=None
-                 ) -> set(Job_):
+                 ) -> [Job_]:
         """
         Get every @Job stored in the database. If the @serverid is set, only return jobs accessing databases on that
         server. If the @database parameter is also set, only selects jobs accessing that database.
@@ -92,11 +94,11 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
         return query.all()
 
     def get_transfers(self,
-                      job: [Job_ | int]=None,
+                      job=None,
                       state: Transfer_.Status=None,
                       start: int=None,
                       limit: int=None
-                      ) -> set(Transfer_):
+                      ) -> [Transfer_]:
         """
         Get every @Transfer that satisfies the constraints. If there are too many transfers, setting @start and @limit
         enables paginating of the results.
@@ -167,7 +169,7 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
     #     return self._session.query(Job).filter(or_(Job.transfers))
 
     def get_log(self, transfer: Transfer, source: str):
-        log = self._session.query(Log).filter(Log.transfer == transfer).filter(Log.log_source == source).one()
+        log = self._session.query(Log).filter(Log.transfer == transfer).filter(Log.log_source == source).first()
         if not log:
             log = Log()
             log.transfer = transfer
@@ -187,6 +189,7 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
         self.modify_status(transfer, "PENDING")
 
         self._session.commit()
+        return transfer
 
     def modify_status(self, transfer: Transfer, status:str):
 
@@ -196,3 +199,7 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
         # Create new history entry
 
         self._session.commit()
+
+    def setup_database(self):
+        from hloader.db.connectors.sqlaentities.Base import Base
+        Base.metadata.create_all(bind=self._engine)

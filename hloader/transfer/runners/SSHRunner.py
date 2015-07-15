@@ -85,7 +85,7 @@ class SSHRunner(ITransferRunner):
                 traceback.print_exc()
 
         except (BadHostKeyException, AuthenticationException, SSHException, socket.error) as err:
-            self._failed(message=str(err))
+            self._transfer_failed(message=str(err))
 
         except PasswordRequiredException:
             # TODO handle Kerberos not initialized exception
@@ -94,7 +94,7 @@ class SSHRunner(ITransferRunner):
             # TODO automatically fix and restart the transfer?
 
         except Exception as err:
-            self._failed(message=str(err))
+            self._transfer_failed(message=str(err))
             traceback.print_exc()
 
     def _communicate(self, channel) -> None:
@@ -112,7 +112,7 @@ class SSHRunner(ITransferRunner):
         :param channel: SSH tunnel that had been set up.
         """
 
-        self._started()
+        self._transfer_started()
 
         # start the transfer
         channel.send(self.sqoop_command)
@@ -134,47 +134,53 @@ class SSHRunner(ITransferRunner):
         buffersize_max = 128
         password_sent = False
 
+        channel.settimeout(1.0)
+
         while not channel.exit_status_ready():
+            try:
+                if channel.recv_ready():
+                    stdout = channel.recv(buffersize)
+                    buffer += u(stdout)
 
-            if channel.recv_ready():
-                stdout = channel.recv(buffersize)
-                buffer += u(stdout)
+                    print("buf " + str(buffersize) + " -- " + buffer)
 
-                if len(buffer):
-                    # AIMD AI
-                    if password_sent and buffersize < buffersize_max:
-                        buffersize += 1
+                    if len(buffer):
+                        # AIMD AI
+                        if buffersize < buffersize_max:
+                            buffersize += 1
 
-                    split = buffer.split('\r\n')
+                        split = buffer.split('\r\n')
 
-                    if split[:-1]:
-                        lines.append(split[:-1])
-                        for line in split[:-1]:
-                            # If the given line contains information about the tracking URL, or the job ID, extract the
-                            # value. If both extracted, automatically start monitoring.
-                            if "The url to track the job:" in line:
-                                self._monitor_rest(line)
-                            elif "Running job:" in line:
-                                self._monitor_rest(line)
+                        if split[:-1]:
+                            for line in split[:-1]:
+                                lines.append(line)
+                                # If the given line contains information about the tracking URL, or the job ID, extract the
+                                # value. If both extracted, automatically start monitoring.
+                                if "The url to track the job:" in line:
+                                    self._monitor_rest(line)
+                                elif "Running job:" in line:
+                                    self._monitor_rest(line)
 
-                        # TODO Not optimal solution, not incremental.
-                        self._update_log("\n".join(lines))
+                            # TODO Not optimal solution, not incremental.
+                            self._update_log("\n".join(lines))
 
-                    buffer = split[-1]
+                        buffer = split[-1]
 
-                    # The password input is in the same line, as the text, so the buffer is to be monitored.
-                    if "Enter password:" in buffer:
-                        # TODO update log (? if needed, now it does not contain the password prompt)
-                        lines.append(buffer)
-                        buffer = ''
+                        # The password input is in the same line, as the text, so the buffer is to be monitored.
+                        if "Enter password:" in buffer:
+                            # TODO update log (? if needed, now it does not contain the password prompt)
+                            lines.append(buffer)
+                            buffer = ''
 
-                        # send the password
-                        channel.send(os.environ.get("HLOADER_ORACLE_READER_PASS", ""))
-                        channel.send(RETURN)
+                            # send the password
+                            channel.send(os.environ.get("HLOADER_ORACLE_READER_PASS", ""))
+                            channel.send(RETURN)
 
-                else:
-                    # AIMD MD
-                    buffersize = max(buffersize / 2, 1)
+                    else:
+                        # AIMD MD
+                        buffersize = max(buffersize / 2, 1)
+            except socket.timeout:
+                buffersize = max(buffersize / 2, 1)
 
     def _monitor_rest(self, information: str) -> None:
         """
@@ -223,17 +229,17 @@ class SSHRunner(ITransferRunner):
         """
         DatabaseManager.meta_connector.modify_status(self._transfer, status)
 
-    def _failed(self, message: str="") -> None:
+    def _transfer_failed(self, message: str="") -> None:
         """
         Call the needed methods to update the status of the transfer to FAILED.
 
         :param message: Message of the failure.
         """
-        self._update_log()
+        # self._update_log()
         self._update_status("FAILED")
         # TODO configure the methods
 
-    def _started(self) -> None:
+    def _transfer_started(self) -> None:
         """
         Call the needed methods to update the status of the transfer to STARTED.
         """

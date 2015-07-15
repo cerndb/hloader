@@ -14,16 +14,15 @@ class Transfer(object):
         self.job_id = job.job_id
         self.transfer_created = str(datetime.now())
         self.transfer_start = str(_transfer.next_run_time)
-        self.transfer_status = Status.STARTED
+        self.transfer_status = Transfer.Status.STARTED
         self.transfer_last_updated = str(datetime.now())
 
+    class Status(object):
+        # Status codes for transfers
+        # STARTED   -> 0
+        # RUNNING   -> 1
+        # WAITING   -> 2
+        # SUCCEEDED -> 3
+        # FAILED    -> 4
 
-class Status(object):
-    # Status codes for transfers
-    # STARTED   -> 0
-    # RUNNING   -> 1
-    # WAITING   -> 2
-    # SUCCEEDED -> 3
-    # FAILED    -> 4
-
-    STARTED, RUNNING, WAITING, SUCCEEDED, FAILED = range(5)
+        STARTED, RUNNING, WAITING, SUCCEEDED, FAILED = range(5)

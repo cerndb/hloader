@@ -171,6 +171,7 @@ class ITransferRunner(threading.Thread):
         command.append("; exit")
 
         print(command)
+        command = map(str, command)
 
         command_string = " ".join(command)
 

@@ -33,7 +33,7 @@ class Job(Base, Job):
     transfers = relationship("hloader.db.connectors.sqlaentities.Transfer.Transfer")
 
     def get_source_server(self) -> OracleServer:
-        return super().get_source_server()
+        return self.source_server
 
     def get_destination_cluster(self) -> HadoopCluster:
-        return super().get_destination_cluster()
+        return self.destination_cluster
