@@ -1,17 +1,13 @@
 from __future__ import absolute_import
 from abc import abstractmethod
-from abc import ABCMeta
 
-from hloader.entities.HadoopCluster import HadoopCluster
 from hloader.entities.Job import Job
-from hloader.entities.OracleServer import OracleServer
 from hloader.entities.Transfer import Transfer
 
 __author__ = 'dstein'
 
 
 class IDatabaseConnector(object):
-    __metaclass__ = ABCMeta
     """
     Interface that has to be implemented by every Database Connector transferred by the @DatabaseManager.
     It contains every method stub used by the REST API provider and other Hadoop-connected parts of the software, eg.,
@@ -78,17 +74,60 @@ class IDatabaseConnector(object):
     # ------------------------------------------------------------------------------------------------------------------
 
     def get_log(self, transfer, source):
+        # TODO
+        """
+
+        :param transfer:
+        :param source:
+
+        :type transfer: Transfer
+        :type source: str
+        :return:
+        """
         raise Exception("Not implemented.")
 
     def modify_status(self, transfer, status):
+        # TODO
+        """
+        :param transfer:
+        :param status:
+
+        :type transfer: Transfer
+        :type status: str
+
+        :rtype: None
+        """
         raise Exception("Not implemented.")
 
     def create_transfer(self, job):
+        # TODO
+        """
+
+        :param job:
+
+        :type job Job
+
+        :return:
+        """
         raise Exception("Not implemented.")
 
     def save_log(self, log):
+        # TODO
+        """
+
+        :param log:
+
+        :type log: Log
+
+        :return:
+        """
         raise Exception("Not implemented.")
 
     @abstractmethod
     def setup_database(self):
+        # TODO
+        """
+
+        :return:
+        """
         pass

@@ -9,13 +9,11 @@ import traceback
 import re
 
 import paramiko
-
 from paramiko.py3compat import u
 
 from paramiko.ssh_exception import PasswordRequiredException, BadHostKeyException, AuthenticationException, SSHException
 
 from hloader.db.DatabaseManager import DatabaseManager
-from hloader.entities.Job import Job
 from hloader.entities.Transfer import Transfer
 from hloader.transfer.ITransferRunner import ITransferRunner
 from hloader.transfer.monitors.RESTMonitor import RESTMonitor
@@ -74,7 +72,7 @@ class SSHRunner(ITransferRunner):
             client.connect(
                 hostname,
                 22,  # TODO might be different
-                'anbose',
+                username,
                 gss_auth=True,  # Using Kerberos authentication
             )
 
@@ -88,16 +86,16 @@ class SSHRunner(ITransferRunner):
             except Exception:
                 traceback.print_exc()
 
-        except (BadHostKeyException, AuthenticationException, SSHException, socket.error), err:
+        except (BadHostKeyException, AuthenticationException, SSHException, socket.error) as err:
             self._transfer_failed(message=str(err))
 
         except PasswordRequiredException:
             # TODO handle Kerberos not initialized exception
-            print "Kerberos is not initialized"
+            print("Kerberos is not initialized")
             traceback.print_exc()
             # TODO automatically fix and restart the transfer?
 
-        except Exception, err:
+        except Exception as err:
             self._transfer_failed(message=str(err))
             traceback.print_exc()
 
@@ -135,7 +133,7 @@ class SSHRunner(ITransferRunner):
         """:type : Log"""
 
         buffersize = 1
-        buffersize_max = 128
+        buffersize_max = 1024
         password_sent = False
 
         channel.settimeout(1.0)
@@ -146,7 +144,7 @@ class SSHRunner(ITransferRunner):
                     stdout = channel.recv(buffersize)
                     buffer += u(stdout)
 
-                    #print "buf " + str(buffersize) + " -- " + buffer
+                    # print("buf " + str(buffersize) + " -- " + buffer)
 
                     if len(buffer):
                         # AIMD AI
@@ -192,6 +190,10 @@ class SSHRunner(ITransferRunner):
         thread.
 
         :param information: Line containing the application or job id.
+
+        :type information: str
+
+        :return: None
         """
 
         # Get the application ID.
@@ -202,14 +204,14 @@ class SSHRunner(ITransferRunner):
                 match = re.search(".*?/(application_.*)/$", self._tracking_url)
                 if match:
                     self._application_id = match.group(1)
-                    print self._application_id
+                    # print(self._application_id)
 
         # Get the job ID.
         if not self._job_id:
             match = re.search(".*?Running job: (.*)$", information)
             if match:
                 self._job_id = match.group(1)
-                print self._job_id
+                # print(self._job_id)
 
         # If both parts are known after this information, start monitoring.
         if self._application_id and self._job_id:
@@ -223,21 +225,39 @@ class SSHRunner(ITransferRunner):
         Use the @DatabaseManager to update the logs for this transfer.
 
         :param content: The content of the log to be saved.
+
+        :type content:  str
+
+        :return None
         """
         self._ssh_log.log_content = content
         DatabaseManager.meta_connector.save_log(self._ssh_log)
 
+        return None
+
     def _update_status(self, status):
         """
         Use the @DatabaseManager to update the status of this transfer and also update the status history.
+
+        :param status: The updated status message.
+
+        :type status: str
+
+        :return: None
         """
         DatabaseManager.meta_connector.modify_status(self._transfer, status)
+
+        return None
 
     def _transfer_failed(self, message=""):
         """
         Call the needed methods to update the status of the transfer to FAILED.
 
         :param message: Message of the failure.
+
+        :type message: str
+
+        :return None
         """
         # self._update_log()
         self._update_status("FAILED")

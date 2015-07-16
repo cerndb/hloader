@@ -60,7 +60,7 @@ class RESTMonitor(threading.Thread):
                     else:
                         try:
                             job_ = response.json()['job']
-                            print str(job_['state']) + ": " + str(job_['mapProgress']) + "%"
+                            print(str(job_['state']) + ": " + str(job_['mapProgress']) + "%")
 
                             if job_['state'] != "RUNNING":
                                 break
@@ -69,7 +69,7 @@ class RESTMonitor(threading.Thread):
                         except Exception:
                             if "SUCCEEDED" in response.text:
                                 # The response is HTML and not JSON, when the job is only in the FINISHED stage.
-                                print 'SUCCEEDED'
+                                print('SUCCEEDED')
                                 break
                             else:
                                 traceback.print_exc()
