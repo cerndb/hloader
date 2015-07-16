@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from datetime import datetime
 
 
@@ -25,4 +26,4 @@ class Transfer(object):
         # SUCCEEDED -> 3
         # FAILED    -> 4
 
-        STARTED, RUNNING, WAITING, SUCCEEDED, FAILED = range(5)
+        STARTED, RUNNING, WAITING, SUCCEEDED, FAILED = xrange(5)

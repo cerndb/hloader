@@ -1,10 +1,17 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+from __future__ import absolute_import
 import logging
 import os
 import threading
 
 from hloader.entities.Job import Job
+from itertools import imap
 
 __author__ = 'dstein'
+
+logging.basicConfig()
 
 
 class ITransferRunner(threading.Thread):
@@ -12,7 +19,7 @@ class ITransferRunner(threading.Thread):
     :type _job: Job
     """
 
-    def __init__(self, job: Job):
+    def __init__(self, job):
         self._job = job
         threading.Thread.__init__(self)
 
@@ -170,8 +177,8 @@ class ITransferRunner(threading.Thread):
         # exit after running the command
         command.append("; exit")
 
-        print(command)
-        command = map(str, command)
+        print command
+        command = imap(str, command)
 
         command_string = " ".join(command)
 
@@ -180,7 +187,7 @@ class ITransferRunner(threading.Thread):
 
         return command_string
 
-    def generate_connection_string(self) -> str:
+    def generate_connection_string(self):
         server = self._job.get_source_server()
         connection_string = "jdbc:oracle:thin:@{address}:{port}/{dbname}".format(address=server.server_address,
                                                                                  port=server.server_port,

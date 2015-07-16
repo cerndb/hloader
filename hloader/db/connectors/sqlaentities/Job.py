@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from hloader.db.connectors.sqlaentities.Base import Base
 from hloader.entities.HadoopCluster import HadoopCluster
 from hloader.entities.Job import Job
@@ -32,8 +33,8 @@ class Job(Base, Job):
     destination_cluster = relationship("hloader.db.connectors.sqlaentities.HadoopCluster.HadoopCluster")
     transfers = relationship("hloader.db.connectors.sqlaentities.Transfer.Transfer")
 
-    def get_source_server(self) -> OracleServer:
+    def get_source_server(self):
         return self.source_server
 
-    def get_destination_cluster(self) -> HadoopCluster:
+    def get_destination_cluster(self):
         return self.destination_cluster

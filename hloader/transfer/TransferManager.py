@@ -1,4 +1,4 @@
 __author__ = 'dstein'
 
-class TransferManager:
+class TransferManager(object):
     pass

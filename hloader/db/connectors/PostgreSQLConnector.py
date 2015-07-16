@@ -1,9 +1,10 @@
+from __future__ import absolute_import
 import psycopg2
 import psycopg2.extras
 import sys
 
 
-class PostgreSQLConnector:
+class PostgreSQLConnector(object):
     def __init__(self, host, dbname, port, user, password):
         try:
             self.connection = psycopg2.connect(
@@ -15,7 +16,7 @@ class PostgreSQLConnector:
             )
             self.connection.autocommit = True
         except:
-            print("Unable to connect to the Postgres server")
+            print "Unable to connect to the Postgres server"
             sys.exit()
 
         self.cursor = self.connection.cursor(
@@ -24,10 +25,10 @@ class PostgreSQLConnector:
 
         self.cursor.execute('SHOW server_version')
         version = self.cursor.fetchone()['server_version']
-        print("Successfully connected to the PostgreSQL Server (%s)" % (version))
-        print("Host:", host)
-        print("Database:", dbname)
-        print("User:", user)
+        print "Successfully connected to the PostgreSQL Server (%s)" % (version)
+        print "Host:", host
+        print "Database:", dbname
+        print "User:", user
 
     def get_servers(self, **kwargs):
         """
@@ -79,7 +80,7 @@ class PostgreSQLConnector:
             )
 
         except:
-            print("Unable to add new server to Postgres table HL_SERVERS")
+            print "Unable to add new server to Postgres table HL_SERVERS"
             sys.exit()
 
         return self.cursor.fetchone()['server_id']

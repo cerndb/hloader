@@ -1,3 +1,8 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+from __future__ import division
+from __future__ import absolute_import
 import os
 import socket
 import traceback
@@ -35,8 +40,7 @@ class SSHRunner(ITransferRunner):
     _transfer = None
     _ssh_log = None
 
-
-    def run(self) -> None:
+    def run(self):
         """
         Run a new transfer for the job it was initialized with.
 
@@ -70,7 +74,7 @@ class SSHRunner(ITransferRunner):
             client.connect(
                 hostname,
                 22,  # TODO might be different
-                username,
+                'anbose',
                 gss_auth=True,  # Using Kerberos authentication
             )
 
@@ -84,20 +88,20 @@ class SSHRunner(ITransferRunner):
             except Exception:
                 traceback.print_exc()
 
-        except (BadHostKeyException, AuthenticationException, SSHException, socket.error) as err:
+        except (BadHostKeyException, AuthenticationException, SSHException, socket.error), err:
             self._transfer_failed(message=str(err))
 
         except PasswordRequiredException:
             # TODO handle Kerberos not initialized exception
-            print("Kerberos is not initialized")
+            print "Kerberos is not initialized"
             traceback.print_exc()
             # TODO automatically fix and restart the transfer?
 
-        except Exception as err:
+        except Exception, err:
             self._transfer_failed(message=str(err))
             traceback.print_exc()
 
-    def _communicate(self, channel) -> None:
+    def _communicate(self, channel):
         """
         Use the SSH tunnel to start the transfer.
 
@@ -142,7 +146,7 @@ class SSHRunner(ITransferRunner):
                     stdout = channel.recv(buffersize)
                     buffer += u(stdout)
 
-                    print("buf " + str(buffersize) + " -- " + buffer)
+                    #print "buf " + str(buffersize) + " -- " + buffer
 
                     if len(buffer):
                         # AIMD AI
@@ -154,8 +158,8 @@ class SSHRunner(ITransferRunner):
                         if split[:-1]:
                             for line in split[:-1]:
                                 lines.append(line)
-                                # If the given line contains information about the tracking URL, or the job ID, extract the
-                                # value. If both extracted, automatically start monitoring.
+                                # If the given line contains information about the tracking URL, or the job ID,
+                                # extract the value. If both extracted, automatically start monitoring.
                                 if "The url to track the job:" in line:
                                     self._monitor_rest(line)
                                 elif "Running job:" in line:
@@ -182,7 +186,7 @@ class SSHRunner(ITransferRunner):
             except socket.timeout:
                 buffersize = max(buffersize / 2, 1)
 
-    def _monitor_rest(self, information: str) -> None:
+    def _monitor_rest(self, information):
         """
         Wait for the lines containing the application and job identifiers, then start the monitoring on a separate
         thread.
@@ -198,14 +202,14 @@ class SSHRunner(ITransferRunner):
                 match = re.search(".*?/(application_.*)/$", self._tracking_url)
                 if match:
                     self._application_id = match.group(1)
-                    print(self._application_id)
+                    print self._application_id
 
         # Get the job ID.
         if not self._job_id:
             match = re.search(".*?Running job: (.*)$", information)
             if match:
                 self._job_id = match.group(1)
-                print(self._job_id)
+                print self._job_id
 
         # If both parts are known after this information, start monitoring.
         if self._application_id and self._job_id:
@@ -214,7 +218,7 @@ class SSHRunner(ITransferRunner):
 
         return None
 
-    def _update_log(self, content: str) -> None:
+    def _update_log(self, content):
         """
         Use the @DatabaseManager to update the logs for this transfer.
 
@@ -223,13 +227,13 @@ class SSHRunner(ITransferRunner):
         self._ssh_log.log_content = content
         DatabaseManager.meta_connector.save_log(self._ssh_log)
 
-    def _update_status(self, status: str) -> None:
+    def _update_status(self, status):
         """
         Use the @DatabaseManager to update the status of this transfer and also update the status history.
         """
         DatabaseManager.meta_connector.modify_status(self._transfer, status)
 
-    def _transfer_failed(self, message: str="") -> None:
+    def _transfer_failed(self, message=""):
         """
         Call the needed methods to update the status of the transfer to FAILED.
 
@@ -239,7 +243,7 @@ class SSHRunner(ITransferRunner):
         self._update_status("FAILED")
         # TODO configure the methods
 
-    def _transfer_started(self) -> None:
+    def _transfer_started(self):
         """
         Call the needed methods to update the status of the transfer to STARTED.
         """

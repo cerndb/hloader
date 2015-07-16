@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from datetime import datetime
 import time
 
@@ -7,6 +8,9 @@ from apscheduler.executors.pool import ThreadPoolExecutor, ProcessPoolExecutor
 
 from hloader.entities.Transfer import Transfer
 from hloader.entities.Job import Job
+
+import logging
+logging.basicConfig()
 
 
 class APScheduler(object):
@@ -32,17 +36,17 @@ class APScheduler(object):
             'timezone': "Europe/Zurich"
         }
 
-        print("Initializing APScheduler")
+        print "Initializing APScheduler"
         self.scheduler = BackgroundScheduler(jobstores=settings['jobstore'],
                                              executors=settings['executors'],
                                              job_defaults=settings['job_defaults'],
                                              timezone=settings['timezone'])
 
-        print("Starting the scheduling daemon")
+        print "Starting the scheduling daemon"
         self.scheduler.start()
 
 
-def start_transfer(aps, job: Job, trigger: str, **kwargs):
+def start_transfer(aps, job, trigger, **kwargs):
     """
     Start a new transfer for a given job.
 
@@ -61,12 +65,12 @@ def start_transfer(aps, job: Job, trigger: str, **kwargs):
     :return: Transfer instance
     """
     _transfer = aps.scheduler.add_job(tick, trigger, **kwargs)
-    transfer = Transfer(job, _transfer)
+    # transfer = Transfer(job, _transfer)
 
 
 def tick():
     # This is dummy job
-    print('Tick! The time is: %s' % datetime.now())
+    print 'Tick! The time is: %s' % datetime.now()
 
 
 if __name__ == '__main__':

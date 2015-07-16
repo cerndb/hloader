@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from hloader.entities.HadoopCluster import HadoopCluster
 from hloader.entities.OracleServer import OracleServer
 
@@ -21,8 +22,8 @@ class Job(object):
     start_time = None
     interval = None
 
-    def get_source_server(self) -> OracleServer:
+    def get_source_server(self):
         raise Exception("Not implemented.")
 
-    def get_destination_cluster(self) -> HadoopCluster:
+    def get_destination_cluster(self):
         raise Exception("Not implemented.")

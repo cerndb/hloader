@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import threading
 import time
 import traceback
@@ -16,7 +17,7 @@ class RESTMonitor(threading.Thread):
     REST API monitoring class, to be run on a parallel thread.
     """
 
-    def __init__(self, tracking_url: str, application_id: str, job_id: str):
+    def __init__(self, tracking_url, application_id, job_id):
         """
         Set up the monitor with the needed parameters.
 
@@ -59,7 +60,7 @@ class RESTMonitor(threading.Thread):
                     else:
                         try:
                             job_ = response.json()['job']
-                            print(str(job_['state']) + ": " + str(job_['mapProgress']) + "%")
+                            print str(job_['state']) + ": " + str(job_['mapProgress']) + "%"
 
                             if job_['state'] != "RUNNING":
                                 break
@@ -68,7 +69,7 @@ class RESTMonitor(threading.Thread):
                         except Exception:
                             if "SUCCEEDED" in response.text:
                                 # The response is HTML and not JSON, when the job is only in the FINISHED stage.
-                                print('SUCCEEDED')
+                                print 'SUCCEEDED'
                                 break
                             else:
                                 traceback.print_exc()
@@ -77,7 +78,7 @@ class RESTMonitor(threading.Thread):
                 else:
                     break
 
-    def _update_log(self, source: str) -> None:
+    def _update_log(self, source):
         """
         Use the @DatabaseManager to update the logs for this transfer.
 
@@ -86,7 +87,7 @@ class RESTMonitor(threading.Thread):
         # TODO Database communication
         pass
 
-    def _update_status(self) -> None:
+    def _update_status(self):
         """
         Use the @DatabaseManager to update the status of this transfer and also update the status history.
         """

@@ -1,8 +1,9 @@
+from __future__ import absolute_import
 from hloader.db.connectors.PostgreSQLAlchemyConnector import PostgreSQLAlchemyConnector
 from hloader.db.IDatabaseConnector import IDatabaseConnector
 
 
-class DatabaseManager:
+class DatabaseManager(object):
     """
     Database manager class, that handles the database connection, the driver, and handles the calls for the implementations.
     :type _auth_oracle_connector: None
@@ -29,9 +30,4 @@ class DatabaseManager:
 
     @staticmethod
     def get_servers():
-        x = DatabaseManager.meta_connector.get_servers()
-        print(x)
-
-
-    # ------------------------------------------------------------------------------------------------------------------
-
+        DatabaseManager.meta_connector.get_servers()

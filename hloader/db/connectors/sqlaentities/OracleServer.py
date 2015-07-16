@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from hloader.db.connectors.sqlaentities.Base import Base
 from hloader.entities.OracleServer import OracleServer
 

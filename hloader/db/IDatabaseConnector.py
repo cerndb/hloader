@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from abc import abstractmethod
 from abc import ABCMeta
 
@@ -9,7 +10,8 @@ from hloader.entities.Transfer import Transfer
 __author__ = 'dstein'
 
 
-class IDatabaseConnector(object, metaclass=ABCMeta):
+class IDatabaseConnector(object):
+    __metaclass__ = ABCMeta
     """
     Interface that has to be implemented by every Database Connector transferred by the @DatabaseManager.
     It contains every method stub used by the REST API provider and other Hadoop-connected parts of the software, eg.,
@@ -22,24 +24,21 @@ class IDatabaseConnector(object, metaclass=ABCMeta):
     # REST API data source methods
     # ------------------------------------------------------------------------------------------------------------------
 
-    def get_servers(self) -> [OracleServer]:
+    def get_servers(self):
         """
         Get every available @OracleServer that the user could select as a source server.
         :return: Set of available servers.
         """
         raise Exception("Not implemented.")
 
-    def get_clusters(self) -> [HadoopCluster]:
+    def get_clusters(self):
         """
         Get every available @HadoopCluster that the user could select as the destination cluster.
         :return: Set of available clusters.
         """
         raise Exception("Not implemented.")
 
-    def get_jobs(self,
-                 server=None,
-                 database: str=None
-                 ) -> [Job]:
+    def get_jobs(self, server=None, database=None):
         """
         Get every @Job stored in the database. If the @serverid is set, only return jobs accessing databases on that
         server. If the @database parameter is also set, only selects jobs accessing that database.
@@ -49,7 +48,7 @@ class IDatabaseConnector(object, metaclass=ABCMeta):
         """
         raise Exception("Not implemented.")
 
-    def get_ready_jobs(self) -> [Job]:
+    def get_ready_jobs(self):
         """
         Get every @Job that is ready and enabled to be run. A job is only enabled, if its last transfer was successful
         (if any), and the time difference since is greater than the user-provided value. Also, it is not not actually
@@ -58,12 +57,7 @@ class IDatabaseConnector(object, metaclass=ABCMeta):
         """
         raise Exception("Not implemented.")
 
-    def get_transfers(self,
-                      job=None,
-                      state: Transfer.Status=None,
-                      start: int=None,
-                      limit: int=None
-                      ) -> [Transfer]:
+    def get_transfers(self, job=None, state=None, start=None, limit=None):
         """
         Get every @Transfer that satisfies the constraints. If there are too many transfers, setting @start and @limit
         enables paginating of the results.
