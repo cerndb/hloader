@@ -99,15 +99,12 @@ class IDatabaseConnector(object):
         """
         raise Exception("Not implemented.")
 
-    def create_transfer(self, job):
+    def create_transfer(self, job, _transfer):
         # TODO
         """
-
-        :param job:
-
-        :type job Job
-
-        :return:
+        :param _transfer: Instance of an APScheduler Job
+        :param job: Instance of Job entity
+        :return: Transfer object
         """
         raise Exception("Not implemented.")
 
