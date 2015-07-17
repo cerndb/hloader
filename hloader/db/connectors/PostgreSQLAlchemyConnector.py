@@ -56,12 +56,24 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
     # REST API data source methods
     # ------------------------------------------------------------------------------------------------------------------
 
-    def get_servers(self):
+    def get_servers(self, **kwargs):
         """
-        Get every available @OracleServer that the user could select as a source server.
-        :return: Set of available servers.
+        Queries the HL_SERVERS table and returns a list of available Oracle servers based on the keyword arguments
+        passed.
+
+        :param kwargs: Zero or more of the following arguments - server_id, server_port, server_name, server_address
+        :return: List of @OracleServers
+        :
         """
-        return self._session.query(OracleServer).all()
+        for key, value in kwargs.items():
+            if value is None:
+                kwargs.pop(key, None)
+
+        if len(kwargs):
+            return self._session.query(OracleServer).filter_by(**kwargs).all()
+        else:
+            return self._session.query(OracleServer).all()
+
 
     def get_clusters(self):
         """

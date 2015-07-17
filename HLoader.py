@@ -64,6 +64,5 @@ else:
 
         DBM.connect_meta("PostgreSQLA", args['postgres_host'], args['postgres_port'], args['postgres_user'],
                          args['postgres_password'], args['postgres_dbname'])
-        #DBM.get_servers()
 
         RunAPIServer(debug=args['debug'], use_reloader=args['use_reloader'])

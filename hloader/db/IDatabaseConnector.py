@@ -20,7 +20,7 @@ class IDatabaseConnector(object):
     # REST API data source methods
     # ------------------------------------------------------------------------------------------------------------------
 
-    def get_servers(self):
+    def get_servers(self, server_id, server_address, server_port, server_name):
         """
         Get every available @OracleServer that the user could select as a source server.
         :return: Set of available servers.
