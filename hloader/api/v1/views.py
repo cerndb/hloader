@@ -25,21 +25,45 @@ def api_index_default():
 
 @app.route('/api/v1/HL_SERVERS')
 def api_HL_SERVERS():
-    s_id = request.args.get('server_id')
-    address = request.args.get('server_address')
-    port = request.args.get('server_port')
-    name = request.args.get('server_name')
+    if set(request.args) <= {'server_id', 'server_address', 'server_port', 'server_name'}:
+        s_id = request.args.get('server_id')
+        address = request.args.get('server_address')
+        port = request.args.get('server_port')
+        name = request.args.get('server_name')
 
-    serialized_dict = [
-        serialize(server)
-        for server in DatabaseManager.meta_connector.get_servers(server_id=s_id,
-                                                                 server_address=address,
-                                                                 server_port=port,
-                                                                 server_name=name)
-        ]
-    return Response(json.dumps(serialized_dict,
-                               indent=4),
-                    mimetype="application/json")
+        serialized_dict = [
+            serialize(server)
+            for server in DatabaseManager.meta_connector.get_servers(server_id=s_id,
+                                                                     server_address=address,
+                                                                     server_port=port,
+                                                                     server_name=name)
+            ]
+        return Response(json.dumps(serialized_dict,
+                                   indent=4),
+                        mimetype="application/json")
+
+    else:
+        raise Exception("InvalidRequestError.")
+
+
+@app.route('/api/v1/HL_CLUSTERS')
+def api_HL_CLUSTERS():
+    if set(request.args) <= {'cluster_id', 'cluster_address', 'cluster_name'}:
+        c_id = request.args.get('cluster_id')
+        address = request.args.get('cluster_address')
+        name = request.args.get('cluster_name')
+
+        serialized_dict = [
+            serialize(cluster)
+            for cluster in DatabaseManager.meta_connector.get_clusters(cluster_id=c_id,
+                                                                       cluster_address=address,
+                                                                       cluster_name=name)
+            ]
+        return Response(json.dumps(serialized_dict,
+                                   indent=4),
+                        mimetype="application/json")
+    else:
+        raise Exception("InvalidRequestError.")
 
 
 def serialize(model):

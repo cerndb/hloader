@@ -74,13 +74,19 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
         else:
             return self._session.query(OracleServer).all()
 
-
-    def get_clusters(self):
+    def get_clusters(self, **kwargs):
         """
         Get every available @HadoopCluster that the user could select as the destination cluster.
         :return: Set of available clusters.
         """
-        return self._session.query(HadoopCluster).all()
+        for key, value in kwargs.items():
+            if value is None:
+                kwargs.pop(key, None)
+
+        if len(kwargs):
+            return self._session.query(HadoopCluster).filter_by(**kwargs).all()
+        else:
+            return self._session.query(HadoopCluster).all()
 
     def get_jobs(self, server=None, database=None):
         """
