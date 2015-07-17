@@ -30,4 +30,4 @@ class DatabaseManager(object):
 
     @staticmethod
     def get_servers():
-        DatabaseManager.meta_connector.get_servers()
+        return DatabaseManager.meta_connector.get_servers()

@@ -13,7 +13,7 @@ from hloader.entities.Job import Job as Job_
 from hloader.entities.OracleServer import OracleServer as OracleServer_
 from hloader.entities.Transfer import Transfer as Transfer_
 
-DEBUG = True
+DEBUG = False
 
 __author__ = 'dstein'
 
@@ -40,7 +40,7 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
                 address=address,
                 port=port,
                 database=database
-            ), echo=True)
+            ), echo=DEBUG)
 
         # Test, whether the connection can be made
         try:

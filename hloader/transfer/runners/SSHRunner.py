@@ -88,6 +88,7 @@ class SSHRunner(ITransferRunner):
 
         except (BadHostKeyException, AuthenticationException, SSHException, socket.error) as err:
             self._transfer_failed(message=str(err))
+            traceback.print_exc()
 
         except PasswordRequiredException:
             # TODO handle Kerberos not initialized exception
@@ -156,6 +157,7 @@ class SSHRunner(ITransferRunner):
                         if split[:-1]:
                             for line in split[:-1]:
                                 lines.append(line)
+                                print(line)
                                 # If the given line contains information about the tracking URL, or the job ID,
                                 # extract the value. If both extracted, automatically start monitoring.
                                 if "The url to track the job:" in line:
@@ -183,6 +185,7 @@ class SSHRunner(ITransferRunner):
                         buffersize = max(buffersize / 2, 1)
             except socket.timeout:
                 buffersize = max(buffersize / 2, 1)
+                traceback.print_exc()
 
     def _monitor_rest(self, information):
         """

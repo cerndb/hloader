@@ -5,37 +5,7 @@ import argparse
 
 from hloader.db.DatabaseManager import DatabaseManager
 from hloader.entities.OracleServer import OracleServer
-
-app = Flask(__name__)
-
-
-@app.route('/api')
-def api_index():
-    # This route must be redirected to a suitable version of the HLoader API
-    # In future the API may well be extended/changed, and backward
-    # compatibility will guarantee that things don't break.
-
-    # Redirect to HLoader API v1
-    return redirect('/api/v1', code=302)
-
-
-@app.route('/api/v1')
-def api_v1_index():
-    return "This is the landing page for the HLoader REST API v1"
-
-
-@app.route('/api/v1/hl_servers')
-def api_v1_hl_servers():
-    s_id = request.args.get('server_id')
-    address = request.args.get('server_address')
-    port = request.args.get('server_port')
-    name = request.args.get('server_name')
-
-    return Response(json.dumps(connector.get_servers(server_id=s_id,
-                                                     server_name=name,
-                                                     server_port=port,
-                                                     server_address=address), indent=4), mimetype='application/json')
-
+from runserver import RunAPIServer
 
 ###############################################################################
 #                           argparse configuration                            #
@@ -83,7 +53,7 @@ if len(sys.argv) == 1:
 
     # Start transfers
 
-    app.run(debug=True, use_reloader=False)
+    RunAPIServer(debug=True, use_reloader=False)
 
 else:
     if args['check_sanity']:
@@ -91,8 +61,9 @@ else:
 
     if args['run']:
         DBM = DatabaseManager()
+
         DBM.connect_meta("PostgreSQLA", args['postgres_host'], args['postgres_port'], args['postgres_user'],
                          args['postgres_password'], args['postgres_dbname'])
-        DBM.get_servers()
+        #DBM.get_servers()
 
-        app.run(debug=args['debug'], use_reloader=args['use_reloader'])
+        RunAPIServer(debug=args['debug'], use_reloader=args['use_reloader'])
