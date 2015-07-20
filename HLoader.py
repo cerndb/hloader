@@ -1,4 +1,5 @@
-from flask import Flask, Response, json, redirect, request
+from __future__ import absolute_import
+
 from os import environ
 import sys
 import argparse

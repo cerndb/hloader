@@ -4,7 +4,7 @@ from datetime import datetime
 
 class Transfer(object):
     transfer_id = None
-    aps_transfer_id = None
+    scheduler_transfer_id = None
     job_id = None
     transfer_start = None
     transfer_status = None

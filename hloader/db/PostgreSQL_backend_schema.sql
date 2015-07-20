@@ -53,12 +53,12 @@ ALTER TABLE HL_SERVERS ADD CONSTRAINT HL_ORACLE_SERVERS_PK PRIMARY KEY ( server_
 DROP TABLE IF EXISTS HL_TRANSFERS CASCADE;
 CREATE TABLE HL_TRANSFERS
   (
-    transfer_id          SERIAL NOT NULL ,
-    aps_transfer_id      TEXT ,
-    job_id               INTEGER NOT NULL ,
-    transfer_status      TEXT ,
-    transfer_start       TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP ,
-    transfer_last_update TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    transfer_id           SERIAL NOT NULL ,
+    scheduler_transfer_id TEXT ,
+    job_id                INTEGER NOT NULL ,
+    transfer_status       TEXT ,
+    transfer_start        TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP ,
+    transfer_last_update  TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
   ) ;
 ALTER TABLE HL_TRANSFERS ADD CONSTRAINT HL_TRANSFERS_PK PRIMARY KEY ( transfer_id ) ;
 

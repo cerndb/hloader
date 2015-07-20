@@ -223,7 +223,7 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
         self._session.add(log)
         self._session.commit()
 
-    def create_transfer(self, job):
+    def create_transfer(self, job, transfer_instance):
         # TODO
         """
 
@@ -235,6 +235,7 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
         """
         transfer = Transfer()
         transfer.job = job
+        transfer.scheduler_transfer_id = transfer_instance.id
         self._session.add(transfer)
 
         self.modify_status(transfer, "PENDING")
