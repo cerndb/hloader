@@ -52,6 +52,7 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
             raise
 
         PostgreSQLAlchemyConnector.Session.configure(bind=self._engine)
+        self._session = self.Session()
 
     #
     # REST API data source methods
@@ -66,15 +67,14 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
         :return: List of @OracleServers
         :
         """
-        session = PostgreSQLAlchemyConnector.Session()
         for key, value in kwargs.items():
             if value is None:
                 kwargs.pop(key, None)
 
         if len(kwargs):
-            return session.query(OracleServer).filter_by(**kwargs).all()
+            return self._session.query(OracleServer).filter_by(**kwargs).all()
         else:
-            return session.query(OracleServer).all()
+            return self._session.query(OracleServer).all()
 
     def get_clusters(self, **kwargs):
         """
@@ -82,15 +82,14 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
 
         :return: Set of available clusters.
         """
-        session = PostgreSQLAlchemyConnector.Session()
         for key, value in kwargs.items():
             if value is None:
                 kwargs.pop(key, None)
 
         if len(kwargs):
-            return session.query(HadoopCluster).filter_by(**kwargs).all()
+            return self._session.query(HadoopCluster).filter_by(**kwargs).all()
         else:
-            return session.query(HadoopCluster).all()
+            return self._session.query(HadoopCluster).all()
 
     def get_jobs(self, server=None, database=None):
         """
@@ -105,8 +104,7 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
 
         :return: Set of selected jobs.
         """
-        session = PostgreSQLAlchemyConnector.Session()
-        query = session.query(Job)
+        query = self._session.query(Job)
 
         if server:
             if server.isinstance(OracleServer_):
@@ -137,8 +135,7 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
 
         :return:
         """
-        session = PostgreSQLAlchemyConnector.Session()
-        query = session.query(Transfer)
+        query = self._session.query(Transfer)
 
         if job:
             if job.isinstance(Job_):
@@ -165,17 +162,16 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
     #     running.
     #     :return: Set of jobs ready to start.
     #     """
-    #     session = PostgreSQLAlchemyConnector.Session()
-    #     last_transfer = session.query(
+    #     last_transfer = self._session.query(
     #         Transfer.job_id,
     #         func.max(Transfer.transfer_start).label("last_transfer")
     #     ).group_by(Transfer.job_id).subquery()
     #
-    #     last_transfer_data = session.query(Transfer) \
+    #     last_transfer_data = self._session.query(Transfer) \
     #         .join(last_transfer, Transfer.job_id == last_transfer.c.job_id) \
     #         .filter(Transfer.transfer_last_update == last_transfer.c.last_transfer).subquery()
     #
-    #     jobs_last_transfer = session.query(Job, last_transfer_data).outerjoin(last_transfer_data) \
+    #     jobs_last_transfer = self._session.query(Job, last_transfer_data).outerjoin(last_transfer_data) \
     #         .filter(
     #         or_(
     #             and_(
@@ -193,7 +189,7 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
     #             )
     #         )).all()
     #
-    #     return session.query(Job).filter(or_(Job.transfers))
+    #     return self._session.query(Job).filter(or_(Job.transfers))
 
     def get_log(self, transfer, source):
         # TODO
@@ -206,8 +202,7 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
         :type source: str
         :return:
         """
-        session = PostgreSQLAlchemyConnector.Session()
-        log = session.query(Log).filter(Log.transfer == transfer).filter(Log.log_source == source).first()
+        log = self._session.query(Log).filter(Log.transfer == transfer).filter(Log.log_source == source).first()
         if not log:
             log = Log()
             log.transfer = transfer
@@ -225,9 +220,8 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
 
         :return:
         """
-        session = PostgreSQLAlchemyConnector.Session()
-        session.add(log)
-        session.commit()
+        self._session.add(log)
+        self._session.commit()
 
     def create_transfer(self, job):
         # TODO
@@ -239,14 +233,13 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
 
         :return:
         """
-        session = PostgreSQLAlchemyConnector.Session()
         transfer = Transfer()
         transfer.job = job
-        session.add(transfer)
+        self._session.add(transfer)
 
         self.modify_status(transfer, "PENDING")
 
-        session.commit()
+        self._session.commit()
         return transfer
 
     def modify_status(self, transfer, status):
@@ -260,13 +253,12 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
 
         :rtype: None
         """
-        session = PostgreSQLAlchemyConnector.Session()
         transfer.transfer_status = status
 
         # TODO proper status handling
         # Create new history entry
 
-        session.commit()
+        self._session.commit()
 
     def setup_database(self):
         # TODO
