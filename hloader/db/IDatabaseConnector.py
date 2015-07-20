@@ -20,14 +20,14 @@ class IDatabaseConnector(object):
     # REST API data source methods
     # ------------------------------------------------------------------------------------------------------------------
 
-    def get_servers(self):
+    def get_servers(self, **kwargs):
         """
         Get every available @OracleServer that the user could select as a source server.
         :return: Set of available servers.
         """
         raise Exception("Not implemented.")
 
-    def get_clusters(self):
+    def get_clusters(self, **kwargs):
         """
         Get every available @HadoopCluster that the user could select as the destination cluster.
         :return: Set of available clusters.
@@ -99,15 +99,12 @@ class IDatabaseConnector(object):
         """
         raise Exception("Not implemented.")
 
-    def create_transfer(self, job):
+    def create_transfer(self, job, _transfer):
         # TODO
         """
-
-        :param job:
-
-        :type job Job
-
-        :return:
+        :param _transfer: Instance of an APScheduler Job
+        :param job: Instance of Job entity
+        :return: Transfer object
         """
         raise Exception("Not implemented.")
 

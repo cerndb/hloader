@@ -27,7 +27,3 @@ class DatabaseManager(object):
         DatabaseManager.meta_connector = {
             "PostgreSQLA": PostgreSQLAlchemyConnector(address, port, username, password, database)
         }.get(type, None)
-
-    @staticmethod
-    def get_servers():
-        DatabaseManager.meta_connector.get_servers()

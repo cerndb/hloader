@@ -10,6 +10,7 @@ from hloader.db.connectors.sqlaentities.Job import Job
 from hloader.db.connectors.sqlaentities.Log import Log
 from hloader.db.connectors.sqlaentities.OracleServer import OracleServer
 from hloader.db.connectors.sqlaentities.Transfer import Transfer
+from hloader.entities.HadoopCluster import HadoopCluster as HadoopCluster_
 from hloader.entities.Job import Job as Job_
 from hloader.entities.OracleServer import OracleServer as OracleServer_
 from hloader.entities.Transfer import Transfer as Transfer_
@@ -56,23 +57,40 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
     # REST API data source methods
     # ------------------------------------------------------------------------------------------------------------------
 
-    def get_servers(self):
+    def get_servers(self, **kwargs):
         """
-        Get every available @OracleServer that the user could select as a source server.
+        Queries the HL_SERVERS table and returns a list of available Oracle servers based on the keyword arguments
+        passed.
 
-        :return: Set of available servers.
+        :param kwargs: Zero or more of the following arguments - server_id, server_port, server_name, server_address
+        :return: List of @OracleServers
+        :
         """
         session = PostgreSQLAlchemyConnector.Session()
-        return session.query(OracleServer).all()
+        for key, value in kwargs.items():
+            if value is None:
+                kwargs.pop(key, None)
 
-    def get_clusters(self):
+        if len(kwargs):
+            return session.query(OracleServer).filter_by(**kwargs).all()
+        else:
+            return session.query(OracleServer).all()
+
+    def get_clusters(self, **kwargs):
         """
         Get every available @HadoopCluster that the user could select as the destination cluster.
 
         :return: Set of available clusters.
         """
         session = PostgreSQLAlchemyConnector.Session()
-        return session.query(HadoopCluster).all()
+        for key, value in kwargs.items():
+            if value is None:
+                kwargs.pop(key, None)
+
+        if len(kwargs):
+            return session.query(HadoopCluster).filter_by(**kwargs).all()
+        else:
+            return session.query(HadoopCluster).all()
 
     def get_jobs(self, server=None, database=None):
         """
