@@ -83,22 +83,27 @@ class SSHRunner(ITransferRunner):
             try:
                 channel.close()
                 client.close()
-            except Exception:
+            except Exception as err:
+                # TODO: Too broad exception clause
                 traceback.print_exc()
+                raise err
 
         except (BadHostKeyException, AuthenticationException, SSHException, socket.error) as err:
             self._transfer_failed(message=str(err))
             traceback.print_exc()
+            raise err
 
-        except PasswordRequiredException:
+        except PasswordRequiredException as err:
             # TODO handle Kerberos not initialized exception
             print("Kerberos is not initialized")
             traceback.print_exc()
             # TODO automatically fix and restart the transfer?
+            raise err
 
         except Exception as err:
             self._transfer_failed(message=str(err))
             traceback.print_exc()
+            raise err
 
     def _communicate(self, channel):
         """
@@ -183,9 +188,10 @@ class SSHRunner(ITransferRunner):
                     else:
                         # AIMD MD
                         buffersize = max(buffersize / 2, 1)
-            except socket.timeout:
+            except socket.timeout as err:
                 buffersize = max(buffersize / 2, 1)
                 traceback.print_exc()
+                raise err
 
     def _monitor_rest(self, information):
         """

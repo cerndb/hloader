@@ -1,11 +1,15 @@
 from __future__ import absolute_import
+from __future__ import print_function
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.executors.pool import ThreadPoolExecutor, ProcessPoolExecutor
+from apscheduler import events
 
 from hloader.schedule.ITransferScheduler import ITransferScheduler
 from hloader.transfer.runners.SSHRunner import SSHRunner
+
+import time
 
 import logging
 logging.basicConfig()
@@ -15,7 +19,7 @@ class APScheduler(ITransferScheduler):
     transfer_instance = None
 
     def __init__(self):
-        settings = {
+        self.settings = {
             'jobstore': {
                 # Keep the schedule information in an encrypted SQLite local store.
                 'default': SQLAlchemyJobStore(url='sqlite:///jobs.sqlite')
@@ -36,14 +40,16 @@ class APScheduler(ITransferScheduler):
             'timezone': "Europe/Zurich"
         }
 
-        print "Initializing APScheduler"
-        self.scheduler = BackgroundScheduler(jobstores=settings['jobstore'],
-                                             executors=settings['executors'],
-                                             job_defaults=settings['job_defaults'],
-                                             timezone=settings['timezone'])
+        print("Initializing APScheduler")
+        self.scheduler = BackgroundScheduler(jobstores=self.settings['jobstore'],
+                                             executors=self.settings['executors'],
+                                             job_defaults=self.settings['job_defaults'],
+                                             timezone=self.settings['timezone'])
+
+        print("Listening to all Transfer events")
+        self.scheduler.add_listener(self.event_listener, events.EVENT_ALL)
 
     def start(self):
-        print "Starting the scheduling daemon"
         self.scheduler.start()
 
     def load_job(self, job, trigger, **kwargs):
@@ -86,9 +92,49 @@ class APScheduler(ITransferScheduler):
         """
         self.scheduler.resume_job(job_id=scheduler_transfer_id)
 
+    def event_listener(self, event):
+        if event.code is events.EVENT_SCHEDULER_START:
+            print("The scheduling daemon was started")
+
+        elif event.code is events.EVENT_SCHEDULER_SHUTDOWN:
+            print("The scheduling daemon was shutdown")
+
+        elif event.code is events.EVENT_ALL_JOBS_REMOVED:
+            print("All transfers were removed from the local job store")
+
+        elif event.code is events.EVENT_JOB_ADDED:
+            print("New transfer added to local job store")
+
+        elif event.code is events.EVENT_JOB_REMOVED:
+            print("Transfer removed from the local job store")
+            print("Scheduler Transfer ID: ", APScheduler.transfer_instance.id)
+
+        elif event.code is events.EVENT_JOB_MODIFIED:
+            print("Transfer modified from outside the scheduler")
+            print("Scheduler Transfer ID: ", APScheduler.transfer_instance.id)
+
+        elif event.code is events.EVENT_JOB_EXECUTED:
+            print("Transfer was executed successfully")
+            print("Scheduler Transfer ID: ", APScheduler.transfer_instance.id)
+
+        elif event.code is events.EVENT_JOB_ERROR:
+            print("Transfer raised an exception during execution")
+            print("Scheduler Transfer ID: ", APScheduler.transfer_instance.id)
+
+        elif event.code is events.EVENT_JOB_MISSED:
+            pass
+
+        else:
+            print("Unknown event")
+
 
 # For serialising the Job and getting a textual reference to the function, we need to keep it outside any class
 
 def tick(job):
-    runner = SSHRunner(job, APScheduler.transfer_instance)
-    runner.run()
+    try:
+        runner = SSHRunner(job, APScheduler.transfer_instance)
+        runner.run()
+
+    except Exception as err:
+        # Send a EVENT_JOB_ERROR signal to the event listener
+        raise err
