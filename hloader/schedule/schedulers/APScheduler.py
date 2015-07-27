@@ -47,9 +47,9 @@ class APScheduler(ITransferScheduler):
 
         print("Initializing APScheduler")
         APScheduler.scheduler = BackgroundScheduler(jobstores=self.settings['jobstore'],
-                                             executors=self.settings['executors'],
-                                             job_defaults=self.settings['job_defaults'],
-                                             timezone=self.settings['timezone'])
+                                                    executors=self.settings['executors'],
+                                                    job_defaults=self.settings['job_defaults'],
+                                                    timezone=self.settings['timezone'])
 
         print("Listening to all Transfer events")
         APScheduler.scheduler.add_listener(self.event_listener, events.EVENT_ALL)
@@ -145,7 +145,7 @@ class APScheduler(ITransferScheduler):
 
 def tick(job):
     try:
-        transfer = DatabaseManager.meta_connector.get_transfers()[0]
+        transfer = DatabaseManager.meta_connector.get_transfers(limit=1)[0]
         runner = SSHRunner(job, transfer)
         runner.run()
 

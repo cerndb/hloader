@@ -67,14 +67,17 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
         :return: List of @OracleServers
         :
         """
+        limit = kwargs.pop('limit', None)
+        offset = kwargs.pop('offset', 0)
+
         for key, value in kwargs.items():
             if value is None:
                 kwargs.pop(key, None)
 
         if len(kwargs):
-            return self._session.query(OracleServer).filter_by(**kwargs).all()
+            return self._session.query(OracleServer).filter_by(**kwargs).limit(limit).offset(offset).all()
         else:
-            return self._session.query(OracleServer).all()
+            return self._session.query(OracleServer).limit(limit).offset(offset).all()
 
     def get_clusters(self, **kwargs):
         """
@@ -82,14 +85,17 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
 
         :return: Set of available clusters.
         """
+        limit = kwargs.pop('limit', None)
+        offset = kwargs.pop('offset', 0)
+
         for key, value in kwargs.items():
             if value is None:
                 kwargs.pop(key, None)
 
         if len(kwargs):
-            return self._session.query(HadoopCluster).filter_by(**kwargs).all()
+            return self._session.query(HadoopCluster).filter_by(**kwargs).limit(limit).offset(offset).all()
         else:
-            return self._session.query(HadoopCluster).all()
+            return self._session.query(HadoopCluster).limit(limit).offset(offset).all()
 
     def get_jobs(self, server=None, database=None):
         """
@@ -135,18 +141,19 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
 
         :return:
         """
+        limit = kwargs.pop('limit', None)
+        offset = kwargs.pop('offset', 0)
+
         for key, value in kwargs.items():
             if value is None:
                 kwargs.pop(key, None)
 
         if len(kwargs):
-            return self._session.query(Transfer).filter_by(**kwargs).all()
+            return self._session.query(Transfer).filter_by(**kwargs).limit(limit).offset(offset).all()
         else:
-            return self._session.query(Transfer).limit(1).all()  # TODO: Fix temporary hack
+            return self._session.query(Transfer).limit(limit).offset(offset).all()
 
         # TODO: state handling
-        # TODO: Pagination
-
 
     #
     # Inner methods
