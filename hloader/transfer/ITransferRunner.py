@@ -19,9 +19,9 @@ class ITransferRunner(threading.Thread):
     :type _job: Job
     """
 
-    def __init__(self, job, transfer_instance):
+    def __init__(self, job, transfer_):
         self._job = job
-        self.transfer_instance = transfer_instance
+        self.transfer = transfer_
         threading.Thread.__init__(self)
 
     def run(self):

@@ -52,7 +52,7 @@ class SSHRunner(ITransferRunner):
         """
 
         # TODO create a Transfer entity for the job
-        self._transfer = DatabaseManager.meta_connector.create_transfer(self._job, self.transfer_instance)
+        self._transfer = self.transfer
         self._ssh_log = DatabaseManager.meta_connector.get_log(self._transfer, "SSH")
 
 

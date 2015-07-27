@@ -53,7 +53,7 @@ class IDatabaseConnector(object):
         """
         raise Exception("Not implemented.")
 
-    def get_transfers(self, job=None, state=None, start=None, limit=None):
+    def get_transfers(self, **kwargs):
         """
         Get every @Transfer that satisfies the constraints. If there are too many transfers, setting @start and @limit
         enables paginating of the results.

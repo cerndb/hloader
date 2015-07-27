@@ -117,7 +117,7 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
 
         return query.all()
 
-    def get_transfers(self, job=None, state=None, start=None, limit=None):
+    def get_transfers(self, **kwargs):
         """
         Get every @Transfer that satisfies the constraints. If there are too many transfers, setting @start and @limit
         enables paginating of the results.
@@ -135,21 +135,18 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
 
         :return:
         """
-        query = self._session.query(Transfer)
+        for key, value in kwargs.items():
+            if value is None:
+                kwargs.pop(key, None)
 
-        if job:
-            if job.isinstance(Job_):
-                query = query.filter(Transfer.job == job)
-            elif job.isinstance(int):
-                query = query.filter(Transfer.job_id == job)
+        if len(kwargs):
+            return self._session.query(Transfer).filter_by(**kwargs).all()
+        else:
+            return self._session.query(Transfer).limit(1).all()  # TODO: Fix temporary hack
 
-        # TODO state handling
-        # if state
+        # TODO: state handling
+        # TODO: Pagination
 
-        if start and limit:
-            query = query.slice(start, start + limit)
-
-        return query.all()
 
     #
     # Inner methods
