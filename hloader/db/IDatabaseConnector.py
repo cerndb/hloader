@@ -34,7 +34,7 @@ class IDatabaseConnector(object):
         """
         raise Exception("Not implemented.")
 
-    def get_jobs(self, server=None, database=None):
+    def get_jobs(self, **kwargs):
         """
         Get every @Job stored in the database. If the @serverid is set, only return jobs accessing databases on that
         server. If the @database parameter is also set, only selects jobs accessing that database.
@@ -99,7 +99,7 @@ class IDatabaseConnector(object):
         """
         raise Exception("Not implemented.")
 
-    def create_transfer(self, job, _transfer):
+    def create_transfer(self, job, transfer):
         # TODO
         """
         :param _transfer: Instance of an APScheduler Job

@@ -9,6 +9,7 @@ from apscheduler import events
 from hloader.schedule.ITransferScheduler import ITransferScheduler
 from hloader.transfer.runners.SSHRunner import SSHRunner
 from hloader.db.DatabaseManager import DatabaseManager
+from hloader.db.connectors.sqlaentities.Transfer import Transfer
 
 from threading import Lock
 
@@ -17,8 +18,6 @@ logging.basicConfig()
 
 
 class APScheduler(ITransferScheduler):
-    transfer_instance = None
-
     scheduler = None
 
     mutex = Lock()
@@ -39,19 +38,19 @@ class APScheduler(ITransferScheduler):
             'job_defaults': {
                 # TODO: Investigate if we need to coalesce missed jobs
                 'coalesce': False,
-                'max_instances': 3
+                'max_instances': 1
             },
 
             'timezone': "Europe/Zurich"
         }
 
-        print("Initializing APScheduler")
+        print("[Schedule Manager] Initializing APScheduler")
         APScheduler.scheduler = BackgroundScheduler(jobstores=self.settings['jobstore'],
                                                     executors=self.settings['executors'],
                                                     job_defaults=self.settings['job_defaults'],
                                                     timezone=self.settings['timezone'])
 
-        print("Listening to all Transfer events")
+        print("[Schedule Manager] Listening to all Transfer events")
         APScheduler.scheduler.add_listener(self.event_listener, events.EVENT_ALL)
 
     def start(self):
@@ -78,8 +77,8 @@ class APScheduler(ITransferScheduler):
         # Mutex implementation to add atomicity to the below operations.
         APScheduler.mutex.acquire()
 
-        APScheduler.transfer_instance = APScheduler.scheduler.add_job(tick, trigger, [job], **kwargs)
-        DatabaseManager.meta_connector.create_transfer(job, APScheduler.transfer_instance)
+        transfer_instance = APScheduler.scheduler.add_job(tick, trigger, [job], **kwargs)
+        DatabaseManager.meta_connector.create_transfer(job, transfer_instance.id)
 
         APScheduler.mutex.release()
 
@@ -106,49 +105,73 @@ class APScheduler(ITransferScheduler):
 
     def event_listener(self, event):
         if event.code is events.EVENT_SCHEDULER_START:
-            print("The scheduling daemon was started")
+            print("[Schedule Manager] The scheduling daemon was started")
 
         elif event.code is events.EVENT_SCHEDULER_SHUTDOWN:
-            print("The scheduling daemon was shutdown")
+            print("[Schedule Manager] The scheduling daemon was shutdown")
 
         elif event.code is events.EVENT_ALL_JOBS_REMOVED:
-            print("All transfers were removed from the local job store")
+            print("[Schedule Manager] All transfers were removed from the local job store")
 
         elif event.code is events.EVENT_JOB_ADDED:
-            print("New transfer added to local job store")
-            print("Scheduler Transfer ID: ", event.job_id)
+            print("[Schedule Manager] New transfer added to local job store")
+            print("[Schedule Manager] Scheduler Transfer ID: ", event.job_id)
 
         elif event.code is events.EVENT_JOB_REMOVED:
-            print("Transfer removed from the local job store")
-            print("Scheduler Transfer ID: ", event.job_id)
+            print("[Schedule Manager] Transfer removed from the local job store")
+            print("[Schedule Manager] Scheduler Transfer ID: ", event.job_id)
 
         elif event.code is events.EVENT_JOB_MODIFIED:
-            print("Transfer modified from outside the scheduler")
-            print("Scheduler Transfer ID: ", event.job_id)
+            print("[Schedule Manager] Transfer modified from outside the scheduler")
+            print("[Schedule Manager] Scheduler Transfer ID: ", event.job_id)
 
         elif event.code is events.EVENT_JOB_EXECUTED:
-            print("Transfer was executed successfully")
-            print("Scheduler Transfer ID: ", event.job_id)
+            APScheduler.mutex.acquire()
+
+            print("[Schedule Manager] Transfer was executed successfully")
+            print("[Schedule Manager] Scheduler Transfer ID: ", event.job_id)
+
+            transfer = DatabaseManager.meta_connector.get_transfers(scheduler_transfer_id=event.job_id)[-1]
+            DatabaseManager.meta_connector.modify_status(transfer, Transfer.Status.SUCCEEDED)
+
+            transfer_instance = APScheduler.scheduler.get_job(event.job_id)
+            if transfer_instance:
+                # The Transfer is probably being triggered by an "interval". Create a new transfer with:
+                #   - the same Job ID
+                #   - the same Scheduler Transfer ID
+                #   - WAITING status, until changed by some other event listener
+
+                DatabaseManager.meta_connector.create_transfer(transfer.job, transfer.scheduler_transfer_id)
+
+            APScheduler.mutex.release()
 
         elif event.code is events.EVENT_JOB_ERROR:
-            print("Transfer raised an exception during execution")
-            print("Scheduler Transfer ID: ", event.job_id)
+            transfer = DatabaseManager.meta_connector.get_transfers(scheduler_transfer_id=event.job_id)[-1]
+            DatabaseManager.meta_connector.modify_status(transfer, Transfer.Status.FAILED)
+            print("[Schedule Manager] Transfer raised an exception during execution")
+            print("[Schedule Manager] Scheduler Transfer ID: ", event.job_id)
 
         elif event.code is events.EVENT_JOB_MISSED:
-            print("Transfer missed")
+            print("[Schedule Manager] Transfer missed")
 
         else:
-            print("Unknown event")
+            print("[Schedule Manager] Unknown event")
 
 
 # For serialising the Job and getting a textual reference to the function, we need to keep it outside any class
 
 def tick(job):
     try:
-        transfer = DatabaseManager.meta_connector.get_transfers(limit=1)[0]
+        APScheduler.mutex.acquire()
+
+        transfer = DatabaseManager.meta_connector.get_transfers(job_id=job.job_id)[-1]
+        DatabaseManager.meta_connector.modify_status(transfer, Transfer.Status.RUNNING)
         runner = SSHRunner(job, transfer)
+
+        APScheduler.mutex.release()
         runner.run()
 
     except Exception as err:
         # Send a EVENT_JOB_ERROR signal to the event listener
         raise err
+

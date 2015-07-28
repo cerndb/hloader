@@ -12,8 +12,8 @@ class Transfer(object):
 
     class Status(object):
         # Status class for transfers
+        WAITING = "WAITING"
         STARTED = "STARTED"
         RUNNING = "RUNNING"
-        WAITING = "WAITING"
         SUCCEEDED = "SUCCEEDED"
         FAILED = "FAILED"

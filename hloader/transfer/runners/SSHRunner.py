@@ -64,7 +64,7 @@ class SSHRunner(ITransferRunner):
         client.load_system_host_keys()
         client.set_missing_host_key_policy(paramiko.WarningPolicy())
 
-        cluster = self._job.get_destination_cluster()
+        cluster = DatabaseManager.meta_connector.get_clusters(cluster_id=self._job.destination_cluster_id)[0]
         hostname = socket.getfqdn(cluster.cluster_address)
         username = os.environ.get("HLOADER_HADOOP_USER", "")  # TODO
 
