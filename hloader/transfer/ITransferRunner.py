@@ -7,6 +7,7 @@ import os
 import threading
 
 from hloader.entities.Job import Job
+from hloader.db.DatabaseManager import DatabaseManager
 from itertools import imap
 
 __author__ = 'dstein'
@@ -19,9 +20,9 @@ class ITransferRunner(threading.Thread):
     :type _job: Job
     """
 
-    def __init__(self, job, aps_transfer):
+    def __init__(self, job, transfer_):
         self._job = job
-        self.aps_transfer = aps_transfer
+        self.transfer = transfer_
         threading.Thread.__init__(self)
 
     def run(self):
@@ -189,7 +190,7 @@ class ITransferRunner(threading.Thread):
         return command_string
 
     def generate_connection_string(self):
-        server = self._job.get_source_server()
+        server = DatabaseManager.meta_connector.get_servers(server_id=self._job.source_server_id)[0]
         connection_string = "jdbc:oracle:thin:@{address}:{port}/{dbname}".format(address=server.server_address,
                                                                                  port=server.server_port,
                                                                                  dbname=self._job.source_database_name)

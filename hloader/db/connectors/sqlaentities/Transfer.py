@@ -13,7 +13,7 @@ class Transfer(Base, Transfer):
     __tablename__ = "HL_TRANSFERS"
 
     transfer_id = Column(Integer, autoincrement=True, nullable=False, primary_key=True)  # SERIAL NOT NULL
-    aps_transfer_id = Column(String, nullable=False)  # TEXT
+    scheduler_transfer_id = Column(String)  # TEXT
     job_id = Column(Integer, ForeignKey('HL_JOBS.job_id'), nullable=False)  # INTEGER NOT NULL
     transfer_status = Column(String)  # TEXT
     transfer_start = Column(DateTime(timezone=True),

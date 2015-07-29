@@ -1,23 +1,29 @@
 from __future__ import absolute_import
-import time
+from __future__ import print_function
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.executors.pool import ThreadPoolExecutor, ProcessPoolExecutor
+from apscheduler import events
 
+from hloader.schedule.ITransferScheduler import ITransferScheduler
 from hloader.transfer.runners.SSHRunner import SSHRunner
+from hloader.db.DatabaseManager import DatabaseManager
+from hloader.db.connectors.sqlaentities.Transfer import Transfer
+
+from threading import Lock
 
 import logging
 logging.basicConfig()
 
 
-class APScheduler(object):
+class APScheduler(ITransferScheduler):
     scheduler = None
-    aps_transfer = None
 
-    @staticmethod
-    def init():
-        settings = {
+    mutex = Lock()
+
+    def __init__(self):
+        self.settings = {
             'jobstore': {
                 # Keep the schedule information in an encrypted SQLite local store.
                 'default': SQLAlchemyJobStore(url='sqlite:///jobs.sqlite')
@@ -32,23 +38,25 @@ class APScheduler(object):
             'job_defaults': {
                 # TODO: Investigate if we need to coalesce missed jobs
                 'coalesce': False,
-                'max_instances': 3
+                'max_instances': 1
             },
 
             'timezone': "Europe/Zurich"
         }
 
-        print "Initializing APScheduler"
-        APScheduler.scheduler = BackgroundScheduler(jobstores=settings['jobstore'],
-                                                    executors=settings['executors'],
-                                                    job_defaults=settings['job_defaults'],
-                                                    timezone=settings['timezone'])
+        print("[Schedule Manager] Initializing APScheduler")
+        APScheduler.scheduler = BackgroundScheduler(jobstores=self.settings['jobstore'],
+                                                    executors=self.settings['executors'],
+                                                    job_defaults=self.settings['job_defaults'],
+                                                    timezone=self.settings['timezone'])
 
-        print "Starting the scheduling daemon"
+        print("[Schedule Manager] Listening to all Transfer events")
+        APScheduler.scheduler.add_listener(self.event_listener, events.EVENT_ALL)
+
+    def start(self):
         APScheduler.scheduler.start()
 
-    @staticmethod
-    def load_job(job, trigger, **kwargs):
+    def load_job(self, job, trigger, **kwargs):
         """
         Start a new transfer for a given job.
 
@@ -64,25 +72,106 @@ class APScheduler(object):
         :param job: Instance of the Job entity
         :param trigger: Type of trigger for the transfer
         :param kwargs: Trigger specific parameters
-        :return: Transfer instance
         """
-        APScheduler.aps_transfer = APScheduler.scheduler.add_job(tick, trigger, [job], **kwargs)
+
+        # Mutex implementation to add atomicity to the below operations.
+        APScheduler.mutex.acquire()
+
+        transfer_instance = APScheduler.scheduler.add_job(tick, trigger, [job], **kwargs)
+        DatabaseManager.meta_connector.create_transfer(job, transfer_instance.id)
+
+        APScheduler.mutex.release()
+
+    def remove_transfer(self, scheduler_transfer_id):
+        """
+        Remove a transfer, and prevent it from being run any more.
+        :param scheduler_transfer_id: Transfer ID used by the scheduler in its job store
+        """
+        APScheduler.scheduler.remove_job(job_id=scheduler_transfer_id)
+
+    def pause_transfer(self, scheduler_transfer_id):
+        """
+        Cause the given transfer not to be executed until it is explicitly resumed.
+        :param scheduler_transfer_id: Transfer ID used by the scheduler in its job store
+        """
+        APScheduler.scheduler.pause_job(job_id=scheduler_transfer_id)
+
+    def resume_transfer(self, scheduler_transfer_id):
+        """
+        Resumes the schedule of the given transfer.
+        :param scheduler_transfer_id: Transfer ID used by the scheduler in its job store
+        """
+        APScheduler.scheduler.resume_job(job_id=scheduler_transfer_id)
+
+    def event_listener(self, event):
+        if event.code is events.EVENT_SCHEDULER_START:
+            print("[Schedule Manager] The scheduling daemon was started")
+
+        elif event.code is events.EVENT_SCHEDULER_SHUTDOWN:
+            print("[Schedule Manager] The scheduling daemon was shutdown")
+
+        elif event.code is events.EVENT_ALL_JOBS_REMOVED:
+            print("[Schedule Manager] All transfers were removed from the local job store")
+
+        elif event.code is events.EVENT_JOB_ADDED:
+            print("[Schedule Manager] New transfer added to local job store")
+            print("[Schedule Manager] Scheduler Transfer ID: ", event.job_id)
+
+        elif event.code is events.EVENT_JOB_REMOVED:
+            print("[Schedule Manager] Transfer removed from the local job store")
+            print("[Schedule Manager] Scheduler Transfer ID: ", event.job_id)
+
+        elif event.code is events.EVENT_JOB_MODIFIED:
+            print("[Schedule Manager] Transfer modified from outside the scheduler")
+            print("[Schedule Manager] Scheduler Transfer ID: ", event.job_id)
+
+        elif event.code is events.EVENT_JOB_EXECUTED:
+            APScheduler.mutex.acquire()
+
+            print("[Schedule Manager] Transfer was executed successfully")
+            print("[Schedule Manager] Scheduler Transfer ID: ", event.job_id)
+
+            transfer = DatabaseManager.meta_connector.get_transfers(scheduler_transfer_id=event.job_id)[-1]
+            DatabaseManager.meta_connector.modify_status(transfer, Transfer.Status.SUCCEEDED)
+
+            transfer_instance = APScheduler.scheduler.get_job(event.job_id)
+            if transfer_instance:
+                # The Transfer is probably being triggered by an "interval". Create a new transfer with:
+                #   - the same Job ID
+                #   - the same Scheduler Transfer ID
+                #   - WAITING status, until changed by some other event listener
+
+                DatabaseManager.meta_connector.create_transfer(transfer.job, transfer.scheduler_transfer_id)
+
+            APScheduler.mutex.release()
+
+        elif event.code is events.EVENT_JOB_ERROR:
+            transfer = DatabaseManager.meta_connector.get_transfers(scheduler_transfer_id=event.job_id)[-1]
+            DatabaseManager.meta_connector.modify_status(transfer, Transfer.Status.FAILED)
+            print("[Schedule Manager] Transfer raised an exception during execution")
+            print("[Schedule Manager] Scheduler Transfer ID: ", event.job_id)
+
+        elif event.code is events.EVENT_JOB_MISSED:
+            print("[Schedule Manager] Transfer missed")
+
+        else:
+            print("[Schedule Manager] Unknown event")
 
 
 # For serialising the Job and getting a textual reference to the function, we need to keep it outside any class
 
 def tick(job):
-    runner = SSHRunner(job, APScheduler.aps_transfer)
-    runner.run()
+    try:
+        APScheduler.mutex.acquire()
 
+        transfer = DatabaseManager.meta_connector.get_transfers(job_id=job.job_id)[-1]
+        DatabaseManager.meta_connector.modify_status(transfer, Transfer.Status.RUNNING)
+        runner = SSHRunner(job, transfer)
 
-if __name__ == '__main__':
-    # Wait for 5 seconds and start the scheduler
-    time.sleep(5)
-    aps_obj = APScheduler()
-    aps_obj.init()
+        APScheduler.mutex.release()
+        runner.run()
 
-    aps_obj.load_job('foo', 'interval', seconds=5)
-    while True:
-        # TODO: Fine tune this setting to decrease CPU busy waiting
-        time.sleep(60)
+    except Exception as err:
+        # Send a EVENT_JOB_ERROR signal to the event listener
+        raise err
+

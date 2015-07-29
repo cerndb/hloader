@@ -1,15 +1,14 @@
 from __future__ import absolute_import
-from hloader.db.DatabaseManager import DatabaseManager
 
-__author__ = 'dstein'
+from hloader.schedule.schedulers.APScheduler import APScheduler
 
-from hloader.schedule.schedulers.DummyScheduler import DummyScheduler
 
-class SchedulerManager(object):
-    _scheduler = DummyScheduler()
+class ScheduleManager(object):
+    daemon = None
 
-    def __init__(self):
-        super(SchedulerManager, self).__init__()
+    def __init__(self, agent):
+        ScheduleManager.daemon = {
+            "APScheduler": APScheduler()
+        }.get(agent, None)
 
-    def run(self):
-        SchedulerManager._scheduler.start()
+        ScheduleManager.daemon.start()

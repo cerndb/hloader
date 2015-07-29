@@ -52,7 +52,7 @@ class SSHRunner(ITransferRunner):
         """
 
         # TODO create a Transfer entity for the job
-        self._transfer = DatabaseManager.meta_connector.create_transfer(self._job, self.aps_transfer)
+        self._transfer = self.transfer
         self._ssh_log = DatabaseManager.meta_connector.get_log(self._transfer, "SSH")
 
 
@@ -64,7 +64,7 @@ class SSHRunner(ITransferRunner):
         client.load_system_host_keys()
         client.set_missing_host_key_policy(paramiko.WarningPolicy())
 
-        cluster = self._job.get_destination_cluster()
+        cluster = DatabaseManager.meta_connector.get_clusters(cluster_id=self._job.destination_cluster_id)[0]
         hostname = socket.getfqdn(cluster.cluster_address)
         username = os.environ.get("HLOADER_HADOOP_USER", "")  # TODO
 
@@ -83,22 +83,27 @@ class SSHRunner(ITransferRunner):
             try:
                 channel.close()
                 client.close()
-            except Exception:
+            except Exception as err:
+                # TODO: Too broad exception clause
                 traceback.print_exc()
+                raise err
 
         except (BadHostKeyException, AuthenticationException, SSHException, socket.error) as err:
             self._transfer_failed(message=str(err))
             traceback.print_exc()
+            raise err
 
-        except PasswordRequiredException:
+        except PasswordRequiredException as err:
             # TODO handle Kerberos not initialized exception
             print("Kerberos is not initialized")
             traceback.print_exc()
             # TODO automatically fix and restart the transfer?
+            raise err
 
         except Exception as err:
             self._transfer_failed(message=str(err))
             traceback.print_exc()
+            raise err
 
     def _communicate(self, channel):
         """
@@ -183,9 +188,10 @@ class SSHRunner(ITransferRunner):
                     else:
                         # AIMD MD
                         buffersize = max(buffersize / 2, 1)
-            except socket.timeout:
+            except socket.timeout as err:
                 buffersize = max(buffersize / 2, 1)
                 traceback.print_exc()
+                raise err
 
     def _monitor_rest(self, information):
         """
