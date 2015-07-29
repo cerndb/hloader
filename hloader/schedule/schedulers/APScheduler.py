@@ -53,6 +53,9 @@ class APScheduler(ITransferScheduler):
         print("[Schedule Manager] Listening to all Transfer events")
         APScheduler.scheduler.add_listener(self.event_listener, events.EVENT_ALL)
 
+        self.Session = DatabaseManager.meta_connector.create_session()
+        self.session = self.Session()
+
     def start(self):
         APScheduler.scheduler.start()
 
@@ -78,7 +81,7 @@ class APScheduler(ITransferScheduler):
         APScheduler.mutex.acquire()
 
         transfer_instance = APScheduler.scheduler.add_job(tick, trigger, [job], **kwargs)
-        DatabaseManager.meta_connector.create_transfer(job, transfer_instance.id)
+        DatabaseManager.meta_connector.create_transfer(self.session, job, transfer_instance.id)
 
         APScheduler.mutex.release()
 
@@ -131,8 +134,8 @@ class APScheduler(ITransferScheduler):
             print("[Schedule Manager] Transfer was executed successfully")
             print("[Schedule Manager] Scheduler Transfer ID: ", event.job_id)
 
-            transfer = DatabaseManager.meta_connector.get_transfers(scheduler_transfer_id=event.job_id)[-1]
-            DatabaseManager.meta_connector.modify_status(transfer, Transfer.Status.SUCCEEDED)
+            transfer = DatabaseManager.meta_connector.get_transfers(self.session, scheduler_transfer_id=event.job_id)[-1]
+            DatabaseManager.meta_connector.modify_status(self.session, transfer, Transfer.Status.SUCCEEDED)
 
             transfer_instance = APScheduler.scheduler.get_job(event.job_id)
             if transfer_instance:
@@ -141,15 +144,21 @@ class APScheduler(ITransferScheduler):
                 #   - the same Scheduler Transfer ID
                 #   - WAITING status, until changed by some other event listener
 
-                DatabaseManager.meta_connector.create_transfer(transfer.job, transfer.scheduler_transfer_id)
+                DatabaseManager.meta_connector.create_transfer(self.session, transfer.job,
+                                                               transfer.scheduler_transfer_id)
 
             APScheduler.mutex.release()
 
         elif event.code is events.EVENT_JOB_ERROR:
-            transfer = DatabaseManager.meta_connector.get_transfers(scheduler_transfer_id=event.job_id)[-1]
-            DatabaseManager.meta_connector.modify_status(transfer, Transfer.Status.FAILED)
+            APScheduler.mutex.acquire()
+
+            transfer = DatabaseManager.meta_connector.get_transfers(self.session,
+                                                                    scheduler_transfer_id=event.job_id)[-1]
+            DatabaseManager.meta_connector.modify_status(self.session, transfer, Transfer.Status.FAILED)
             print("[Schedule Manager] Transfer raised an exception during execution")
             print("[Schedule Manager] Scheduler Transfer ID: ", event.job_id)
+
+            APScheduler.mutex.release()
 
         elif event.code is events.EVENT_JOB_MISSED:
             print("[Schedule Manager] Transfer missed")
@@ -161,17 +170,25 @@ class APScheduler(ITransferScheduler):
 # For serialising the Job and getting a textual reference to the function, we need to keep it outside any class
 
 def tick(job):
+    # Create a new Session instance for tick(), since it runs on a separate thread.
+    Session = DatabaseManager.meta_connector.create_session()
+    session = Session()
     try:
         APScheduler.mutex.acquire()
 
-        transfer = DatabaseManager.meta_connector.get_transfers(job_id=job.job_id)[-1]
-        DatabaseManager.meta_connector.modify_status(transfer, Transfer.Status.RUNNING)
+        transfer = DatabaseManager.meta_connector.get_transfers(session, job_id=job.job_id)[-1]
+        DatabaseManager.meta_connector.modify_status(session, transfer, Transfer.Status.RUNNING)
         runner = SSHRunner(job, transfer)
 
         APScheduler.mutex.release()
-        runner.run()
+
+        # Remove the current session, since SSH Runner creates its own.
+        Session.remove()
+
+        runner.start()
 
     except Exception as err:
         # Send a EVENT_JOB_ERROR signal to the event listener
         raise err
 
+    runner.join()

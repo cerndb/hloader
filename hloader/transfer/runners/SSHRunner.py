@@ -53,8 +53,7 @@ class SSHRunner(ITransferRunner):
 
         # TODO create a Transfer entity for the job
         self._transfer = self.transfer
-        self._ssh_log = DatabaseManager.meta_connector.get_log(self._transfer, "SSH")
-
+        self._ssh_log = DatabaseManager.meta_connector.get_log(self.session, self._transfer, "SSH")
 
         # create an SSH tunnel
         client = paramiko.SSHClient()
@@ -64,7 +63,7 @@ class SSHRunner(ITransferRunner):
         client.load_system_host_keys()
         client.set_missing_host_key_policy(paramiko.WarningPolicy())
 
-        cluster = DatabaseManager.meta_connector.get_clusters(cluster_id=self._job.destination_cluster_id)[0]
+        cluster = DatabaseManager.meta_connector.get_clusters(self.session, cluster_id=self._job.destination_cluster_id)[0]
         hostname = socket.getfqdn(cluster.cluster_address)
         username = os.environ.get("HLOADER_HADOOP_USER", "")  # TODO
 
@@ -104,6 +103,8 @@ class SSHRunner(ITransferRunner):
             self._transfer_failed(message=str(err))
             traceback.print_exc()
             raise err
+
+        self.Session.remove()
 
     def _communicate(self, channel):
         """
@@ -240,7 +241,7 @@ class SSHRunner(ITransferRunner):
         :return None
         """
         self._ssh_log.log_content = content
-        DatabaseManager.meta_connector.save_log(self._ssh_log)
+        DatabaseManager.meta_connector.save_log(self.session, self._ssh_log)
 
         return None
 
@@ -254,7 +255,7 @@ class SSHRunner(ITransferRunner):
 
         :return: None
         """
-        DatabaseManager.meta_connector.modify_status(self._transfer, status)
+        DatabaseManager.meta_connector.modify_status(self.session, self._transfer, status)
 
         return None
 

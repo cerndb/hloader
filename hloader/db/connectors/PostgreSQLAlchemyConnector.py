@@ -1,9 +1,7 @@
 from __future__ import absolute_import
 
 from sqlalchemy import create_engine
-
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm import scoped_session
+from sqlalchemy.orm import sessionmaker, scoped_session
 
 from hloader.db.IDatabaseConnector import IDatabaseConnector
 from hloader.db.connectors.sqlaentities.HadoopCluster import HadoopCluster
@@ -11,12 +9,11 @@ from hloader.db.connectors.sqlaentities.Job import Job
 from hloader.db.connectors.sqlaentities.Log import Log
 from hloader.db.connectors.sqlaentities.OracleServer import OracleServer
 from hloader.db.connectors.sqlaentities.Transfer import Transfer
-from hloader.entities.HadoopCluster import HadoopCluster as HadoopCluster_
-from hloader.entities.Job import Job as Job_
-from hloader.entities.OracleServer import OracleServer as OracleServer_
-from hloader.entities.Transfer import Transfer as Transfer_
 
-DEBUG = True
+import signal
+import sys
+
+DEBUG = False
 
 __author__ = 'dstein'
 
@@ -32,9 +29,6 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
     :type _engine: Engine
     :type _session: sqlalchemy.orm.session.Session
     """
-
-    session_factory = sessionmaker()
-    Session = scoped_session(session_factory)
 
     def __init__(self, address, port, username, password, database):
         self._engine = create_engine(
@@ -53,17 +47,25 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
             # TODO better error handling
             raise
 
-        PostgreSQLAlchemyConnector.Session.configure(bind=self._engine)
-        self._session = self.Session()
+        self.session_factory = sessionmaker(bind=self._engine)
 
-        # TODO: Temporary fix for development server
-        signal.signal(signal.SIGINT, self.signal_handler)
 
     #
     # REST API data source methods
     # ------------------------------------------------------------------------------------------------------------------
 
-    def get_servers(self, **kwargs):
+    def create_session(self):
+        """
+        Returns a scoped session object from the Session Factory.
+        PostgreSQLAlchemyConnector should never create any session (scoped, or otherwise) to access the database.
+        Instead, the session returned by this method should be supplied to the functions in PostgreSQLAlchemyConnector
+        wherever there is a need for a session to access the database.
+        :return: sqlalchemy.orm.session.Session
+        """
+
+        return scoped_session(self.session_factory)
+
+    def get_servers(self, _session, **kwargs):
         """
         Queries the HL_SERVERS table and returns a list of available Oracle servers based on the keyword arguments
         passed.
@@ -80,11 +82,11 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
                 kwargs.pop(key, None)
 
         if len(kwargs):
-            return self._session.query(OracleServer).filter_by(**kwargs).limit(limit).offset(offset).all()
+            return _session.query(OracleServer).filter_by(**kwargs).limit(limit).offset(offset).all()
         else:
-            return self._session.query(OracleServer).limit(limit).offset(offset).all()
+            return _session.query(OracleServer).limit(limit).offset(offset).all()
 
-    def get_clusters(self, **kwargs):
+    def get_clusters(self, _session, **kwargs):
         """
         Get every available @HadoopCluster that the user could select as the destination cluster.
 
@@ -98,11 +100,11 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
                 kwargs.pop(key, None)
 
         if len(kwargs):
-            return self._session.query(HadoopCluster).filter_by(**kwargs).limit(limit).offset(offset).all()
+            return _session.query(HadoopCluster).filter_by(**kwargs).limit(limit).offset(offset).all()
         else:
-            return self._session.query(HadoopCluster).limit(limit).offset(offset).all()
+            return _session.query(HadoopCluster).limit(limit).offset(offset).all()
 
-    def get_jobs(self, **kwargs):
+    def get_jobs(self, _session, **kwargs):
         """
         Get every @Job stored in the database. If the @serverid is set, only return jobs accessing databases on that
         server. If the @database parameter is also set, only selects jobs accessing that database.
@@ -123,11 +125,11 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
                 kwargs.pop(key, None)
 
         if len(kwargs):
-            return self._session.query(Job).filter_by(**kwargs).limit(limit).offset(offset).all()
+            return _session.query(Job).filter_by(**kwargs).limit(limit).offset(offset).all()
         else:
-            return self._session.query(Job).limit(limit).offset(offset).all()
+            return _session.query(Job).limit(limit).offset(offset).all()
 
-    def get_transfers(self, **kwargs):
+    def get_transfers(self, _session, **kwargs):
         """
         Get every @Transfer that satisfies the constraints. If there are too many transfers, setting @start and @limit
         enables paginating of the results.
@@ -162,14 +164,14 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
                 kwargs.pop(key, None)
 
         if len(kwargs):
-            return self._session.query(Transfer)\
+            return _session.query(Transfer)\
                 .filter_by(**kwargs)\
                 .limit(limit)\
                 .order_by(order)\
                 .offset(offset)\
                 .all()
         else:
-            return self._session.query(Transfer).limit(limit).offset(offset).all()
+            return _session.query(Transfer).limit(limit).offset(offset).all()
 
             # TODO: state handling
 
@@ -213,8 +215,7 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
     #
     #     return self._session.query(Job).filter(or_(Job.transfers))
 
-    def get_log(self, transfer, source):
-        # TODO
+    def get_log(self, _session, transfer, source):
         """
 
         :param transfer:
@@ -224,15 +225,21 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
         :type source: str
         :return:
         """
-        log = self._session.query(Log).filter(Log.transfer == transfer).filter(Log.log_source == source).first()
+
+        # TODO: Need to test if we can make do without the line below
+        # log = _session.query(Log).filter(Log.transfer == transfer, Log.log_source == source).first()
+
+        log = None
         if not log:
             log = Log()
             log.transfer = transfer
             log.log_source = source
+        _session.add(log)
+        _session.commit()
 
         return log
 
-    def save_log(self, log):
+    def save_log(self, _session, log):
         # TODO
         """
 
@@ -242,10 +249,10 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
 
         :return:
         """
-        self._session.add(log)
-        self._session.commit()
+        _session.add(log)
+        _session.commit()
 
-    def create_transfer(self, job, transfer_instance_id):
+    def create_transfer(self, _session, job, transfer_instance_id):
         # TODO
         """
 
@@ -258,14 +265,14 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
         transfer = Transfer()
         transfer.job = job
         transfer.scheduler_transfer_id = transfer_instance_id
-        self._session.add(transfer)
+        _session.add(transfer)
 
-        self.modify_status(transfer, Transfer.Status.WAITING)
+        self.modify_status(_session, transfer, Transfer.Status.WAITING)
 
-        self._session.commit()
+        _session.commit()
         return transfer
 
-    def modify_status(self, transfer, status):
+    def modify_status(self, _session, transfer, status):
         # TODO
         """
         :param transfer:
@@ -281,7 +288,7 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
         # TODO proper status handling
         # Create new history entry
 
-        self._session.commit()
+        _session.commit()
 
     def setup_database(self):
         # TODO
@@ -292,9 +299,3 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
         from hloader.db.connectors.sqlaentities.Base import Base
 
         Base.metadata.create_all(bind=self._engine)
-
-    def signal_handler(self, trap, frame):
-        if trap is signal.SIGINT:
-            print("\nKeyboard Interrupt caught. Closing all SQLAlchemy sessions before exiting.")
-            self._session.close_all()
-            sys.exit(0)
