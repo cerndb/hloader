@@ -3,6 +3,7 @@ from __future__ import absolute_import
 from sqlalchemy import create_engine
 
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import scoped_session
 
 from hloader.db.IDatabaseConnector import IDatabaseConnector
 from hloader.db.connectors.sqlaentities.HadoopCluster import HadoopCluster
@@ -32,7 +33,8 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
     :type _session: sqlalchemy.orm.session.Session
     """
 
-    Session = sessionmaker()
+    session_factory = sessionmaker()
+    Session = scoped_session(session_factory)
 
     def __init__(self, address, port, username, password, database):
         self._engine = create_engine(
@@ -237,7 +239,7 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
         transfer.job = job
         self._session.add(transfer)
 
-        self.modify_status(transfer, "PENDING")
+        # self.modify_status(transfer, "PENDING")
 
         self._session.commit()
         return transfer
