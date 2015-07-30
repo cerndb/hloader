@@ -20,16 +20,9 @@ class ITransferRunner(threading.Thread):
     :type _job: Job
     """
 
-    def __init__(self, job, transfer_):
+    def __init__(self, job, transfer):
         self._job = job
-        self.transfer = transfer_
-
-        # Create a new SQLAlchemy scoped session for every thread spawned by SSH Runner.
-        # self.Session stores the scoped session registry, which can be called multiple
-        # times to get the current session.
-        self.Session = DatabaseManager.meta_connector.create_session()
-        self.session = self.Session()
-
+        self._transfer = transfer
         threading.Thread.__init__(self)
 
     def run(self):
@@ -197,7 +190,7 @@ class ITransferRunner(threading.Thread):
         return command_string
 
     def generate_connection_string(self):
-        server = DatabaseManager.meta_connector.get_servers(self.session, server_id=self._job.source_server_id)[0]
+        server = DatabaseManager.meta_connector.get_servers(server_id=self._job.source_server_id)[0]
         connection_string = "jdbc:oracle:thin:@{address}:{port}/{dbname}".format(address=server.server_address,
                                                                                  port=server.server_port,
                                                                                  dbname=self._job.source_database_name)

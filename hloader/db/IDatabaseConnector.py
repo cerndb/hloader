@@ -22,21 +22,21 @@ class IDatabaseConnector(object):
     def create_session(self):
         pass
 
-    def get_servers(self, _session, **kwargs):
+    def get_servers(self, **kwargs):
         """
         Get every available @OracleServer that the user could select as a source server.
         :return: Set of available servers.
         """
         raise Exception("Not implemented.")
 
-    def get_clusters(self, _session, **kwargs):
+    def get_clusters(self, **kwargs):
         """
         Get every available @HadoopCluster that the user could select as the destination cluster.
         :return: Set of available clusters.
         """
         raise Exception("Not implemented.")
 
-    def get_jobs(self, _session, **kwargs):
+    def get_jobs(self, **kwargs):
         """
         Get every @Job stored in the database. If the @serverid is set, only return jobs accessing databases on that
         server. If the @database parameter is also set, only selects jobs accessing that database.
@@ -55,7 +55,7 @@ class IDatabaseConnector(object):
         """
         raise Exception("Not implemented.")
 
-    def get_transfers(self, _session, **kwargs):
+    def get_transfers(self, **kwargs):
         """
         Get every @Transfer that satisfies the constraints. If there are too many transfers, setting @start and @limit
         enables paginating of the results.
@@ -75,7 +75,7 @@ class IDatabaseConnector(object):
     # Inner methods
     # ------------------------------------------------------------------------------------------------------------------
 
-    def get_log(self, _session, transfer, source):
+    def get_log(self, transfer, source):
         # TODO
         """
 
@@ -88,7 +88,7 @@ class IDatabaseConnector(object):
         """
         raise Exception("Not implemented.")
 
-    def modify_status(self, _session, transfer, status):
+    def modify_status(self, transfer, status):
         # TODO
         """
         :param transfer:
@@ -101,16 +101,16 @@ class IDatabaseConnector(object):
         """
         raise Exception("Not implemented.")
 
-    def create_transfer(self, _session, job, transfer):
+    def create_transfer(self, job, transfer):
         # TODO
         """
-        :param _transfer: Instance of an APScheduler Job
+        :param transfer: Instance of an APScheduler Job
         :param job: Instance of Job entity
         :return: Transfer object
         """
         raise Exception("Not implemented.")
 
-    def save_log(self, _session, log):
+    def save_log(self, log):
         # TODO
         """
 

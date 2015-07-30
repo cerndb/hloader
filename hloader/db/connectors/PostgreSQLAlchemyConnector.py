@@ -10,9 +10,6 @@ from hloader.db.connectors.sqlaentities.Log import Log
 from hloader.db.connectors.sqlaentities.OracleServer import OracleServer
 from hloader.db.connectors.sqlaentities.Transfer import Transfer
 
-import signal
-import sys
-
 DEBUG = False
 
 __author__ = 'dstein'
@@ -49,7 +46,6 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
 
         self.session_factory = sessionmaker(bind=self._engine)
 
-
     #
     # REST API data source methods
     # ------------------------------------------------------------------------------------------------------------------
@@ -65,7 +61,7 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
 
         return scoped_session(self.session_factory)
 
-    def get_servers(self, _session, **kwargs):
+    def get_servers(self, _session=None, **kwargs):
         """
         Queries the HL_SERVERS table and returns a list of available Oracle servers based on the keyword arguments
         passed.
@@ -74,6 +70,13 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
         :return: List of @OracleServers
         :
         """
+
+        if not _session:
+            _inner_session_registry = self.create_session()
+            _inner_session = _inner_session_registry()
+        else:
+            _inner_session = _session
+
         limit = kwargs.pop('limit', None)
         offset = kwargs.pop('offset', 0)
 
@@ -82,16 +85,29 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
                 kwargs.pop(key, None)
 
         if len(kwargs):
-            return _session.query(OracleServer).filter_by(**kwargs).limit(limit).offset(offset).all()
+            result = _inner_session.query(OracleServer).filter_by(**kwargs).limit(limit).offset(offset).all()
         else:
-            return _session.query(OracleServer).limit(limit).offset(offset).all()
+            result = _inner_session.query(OracleServer).limit(limit).offset(offset).all()
 
-    def get_clusters(self, _session, **kwargs):
+        if not _session:
+            _inner_session_registry.remove()
+
+        return result
+
+
+    def get_clusters(self, _session=None, **kwargs):
         """
         Get every available @HadoopCluster that the user could select as the destination cluster.
 
         :return: Set of available clusters.
         """
+
+        if not _session:
+            _inner_session_registry = self.create_session()
+            _inner_session = _inner_session_registry()
+        else:
+            _inner_session = _session
+
         limit = kwargs.pop('limit', None)
         offset = kwargs.pop('offset', 0)
 
@@ -100,11 +116,16 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
                 kwargs.pop(key, None)
 
         if len(kwargs):
-            return _session.query(HadoopCluster).filter_by(**kwargs).limit(limit).offset(offset).all()
+            result = _inner_session.query(HadoopCluster).filter_by(**kwargs).limit(limit).offset(offset).all()
         else:
-            return _session.query(HadoopCluster).limit(limit).offset(offset).all()
+            result = _inner_session.query(HadoopCluster).limit(limit).offset(offset).all()
 
-    def get_jobs(self, _session, **kwargs):
+        if not _session:
+            _inner_session_registry.remove()
+
+        return result
+
+    def get_jobs(self, _session=None, **kwargs):
         """
         Get every @Job stored in the database. If the @serverid is set, only return jobs accessing databases on that
         server. If the @database parameter is also set, only selects jobs accessing that database.
@@ -117,6 +138,13 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
 
         :return: Set of selected jobs.
         """
+
+        if not _session:
+            _inner_session_registry = self.create_session()
+            _inner_session = _inner_session_registry()
+        else:
+            _inner_session = _session
+
         limit = kwargs.pop('limit', None)
         offset = kwargs.pop('offset', 0)
 
@@ -125,11 +153,16 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
                 kwargs.pop(key, None)
 
         if len(kwargs):
-            return _session.query(Job).filter_by(**kwargs).limit(limit).offset(offset).all()
+            result = _inner_session.query(Job).filter_by(**kwargs).limit(limit).offset(offset).all()
         else:
-            return _session.query(Job).limit(limit).offset(offset).all()
+            result = _inner_session.query(Job).limit(limit).offset(offset).all()
 
-    def get_transfers(self, _session, **kwargs):
+        if not _session:
+            _inner_session_registry.remove()
+
+        return result
+
+    def get_transfers(self, _session=None, **kwargs):
         """
         Get every @Transfer that satisfies the constraints. If there are too many transfers, setting @start and @limit
         enables paginating of the results.
@@ -147,6 +180,12 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
 
         :return:
         """
+        if not _session:
+            _inner_session_registry = self.create_session()
+            _inner_session = _inner_session_registry()
+        else:
+            _inner_session = _session
+
         limit = kwargs.pop('limit', None)
         offset = kwargs.pop('offset', 0)
 
@@ -164,16 +203,21 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
                 kwargs.pop(key, None)
 
         if len(kwargs):
-            return _session.query(Transfer)\
+            result = _inner_session.query(Transfer)\
                 .filter_by(**kwargs)\
                 .limit(limit)\
                 .order_by(order)\
                 .offset(offset)\
                 .all()
         else:
-            return _session.query(Transfer).limit(limit).offset(offset).all()
+            result = _inner_session.query(Transfer).limit(limit).offset(offset).all()
 
             # TODO: state handling
+
+        if not _session:
+            _inner_session_registry.remove()
+
+        return result
 
     #
     # Inner methods
@@ -215,7 +259,7 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
     #
     #     return self._session.query(Job).filter(or_(Job.transfers))
 
-    def get_log(self, _session, transfer, source):
+    def get_log(self, transfer, source, _session=None):
         """
 
         :param transfer:
@@ -226,6 +270,12 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
         :return:
         """
 
+        if not _session:
+            _inner_session_registry = self.create_session()
+            _inner_session = _inner_session_registry()
+        else:
+            _inner_session = _session
+
         # TODO: Need to test if we can make do without the line below
         # log = _session.query(Log).filter(Log.transfer == transfer, Log.log_source == source).first()
 
@@ -234,12 +284,15 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
             log = Log()
             log.transfer = transfer
             log.log_source = source
-        _session.add(log)
-        _session.commit()
+        _inner_session.add(log)
+
+        if not _session:
+            _inner_session.commit()
+            _inner_session_registry.remove()
 
         return log
 
-    def save_log(self, _session, log):
+    def save_log(self, log, _session=None):
         # TODO
         """
 
@@ -249,10 +302,19 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
 
         :return:
         """
-        _session.add(log)
-        _session.commit()
 
-    def create_transfer(self, _session, job, transfer_instance_id):
+        if not _session:
+            _inner_session_registry = self.create_session()
+            _inner_session = _inner_session_registry()
+        else:
+            _inner_session = _session
+
+        _inner_session.add(log)
+        if not _session:
+            _inner_session.commit()
+            _inner_session_registry.remove()
+
+    def create_transfer(self, job, transfer_instance_id, _session=None):
         # TODO
         """
 
@@ -262,17 +324,24 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
 
         :return:
         """
+        if not _session:
+            _inner_session_registry = self.create_session()
+            _inner_session = _inner_session_registry()
+        else:
+            _inner_session = _session
+
         transfer = Transfer()
         transfer.job = job
         transfer.scheduler_transfer_id = transfer_instance_id
-        _session.add(transfer)
+        _inner_session.add(transfer)
 
-        self.modify_status(_session, transfer, Transfer.Status.WAITING)
+        if not _session:
+            _inner_session.commit()
+            _inner_session_registry.remove()
 
-        _session.commit()
         return transfer
 
-    def modify_status(self, _session, transfer, status):
+    def modify_status(self, transfer, status, _session=None):
         # TODO
         """
         :param transfer:
@@ -283,12 +352,23 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
 
         :rtype: None
         """
+        if not _session:
+            _inner_session_registry = self.create_session()
+            _inner_session = _inner_session_registry()
+        else:
+            _inner_session = _session
+
         transfer.transfer_status = status
+
+        transfer = _inner_session.merge(transfer)
+        _inner_session.add(transfer)
 
         # TODO proper status handling
         # Create new history entry
 
-        _session.commit()
+        if not _session:
+            _inner_session.commit()
+            _inner_session_registry.remove()
 
     def setup_database(self):
         # TODO
