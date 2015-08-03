@@ -11,3 +11,7 @@ pip-log.txt
 .DS_Store
 
 .idea
+
+.gitignore
+
+hloader/pass_config.py

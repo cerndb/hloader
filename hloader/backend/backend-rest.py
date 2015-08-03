@@ -1,37 +1,27 @@
-# from os import environ
-#
-# from hloader.db.DatabaseManager import DatabaseManager
-#
-# USERNAME = "user"
-#
-# __author__ = 'dstein'
-#
-#
-# # Initialize database connection
-# postgre_address = environ.get('POSTGRE_ADDRESS')
-# postgre_port = environ.get('POSTGRE_PORT')
-# postgre_username = environ.get('POSTGRE_USERNAME')
-# postgre_password = environ.get('POSTGRE_PASSWORD')
-# postgre_database = environ.get('POSTGRE_DATABASE')
-#
-# if not (postgre_address and postgre_port and postgre_username and postgre_password and postgre_database):
-#     raise Exception("Environmental variables are not properly set up.")
-#
-# DatabaseManager.connect_meta("PostgreSQLA",
-#                              postgre_address, postgre_port, postgre_username, postgre_password, postgre_database)
-#
-
 from __future__ import absolute_import
 
 import sys
+sys.path.insert(0, "//cern.ch/dfs/websites/t/test-hloader-server/hloader/backend/libs")
 
-sys.path.insert(0, "libs")
-from flup.server.fcgi import WSGIServer
+from flup.server.cgi import WSGIServer
 
-from hloader.backend.api import app
-from hloader.backend.api.v1 import views
+from hloader.db.DatabaseManager import DatabaseManager
+from hloader.config import ORACLE_ALIAS, ORACLE_PORT, ORACLE_SID, ORACLE_PASSWORD, ORACLE_USERNAME
+from hloader.config import POSTGRE_ADDRESS, POSTGRE_DATABASE, POSTGRE_PASSWORD, POSTGRE_PORT, POSTGRE_USERNAME
+
+if not (POSTGRE_ADDRESS and POSTGRE_PORT and POSTGRE_USERNAME and POSTGRE_PASSWORD and POSTGRE_DATABASE):
+    raise Exception("Config not properly set up.")
+
+DatabaseManager.connect_meta("PostgreSQLA",
+                             POSTGRE_ADDRESS, POSTGRE_PORT, POSTGRE_USERNAME, POSTGRE_PASSWORD, POSTGRE_DATABASE)
+
+DatabaseManager.connect_auth(ORACLE_ALIAS, ORACLE_PORT, ORACLE_USERNAME, ORACLE_PASSWORD, ORACLE_SID)
+
+from hloader.backend.api import app  # initialize the application in hloader.backend.api
+from hloader.backend.api.v1 import views  # load all the views and set the api to v1 in hloader.backend.api.v1
 
 if __name__ == "__main__":
+    # app.run()
     WSGIServer(app).run()
 
-views.__author__
+views.__author__  # placeholder, so the views initializer script won't get deleted by accidental auto-formatting
