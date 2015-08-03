@@ -4,6 +4,7 @@
 from __future__ import division
 from __future__ import absolute_import
 import os
+import sys
 import socket
 import traceback
 import re
@@ -82,13 +83,11 @@ class SSHRunner(ITransferRunner):
                 client.close()
             except Exception as err:
                 # TODO: Too broad exception clause
-                traceback.print_exc()
-                raise err
+                self._transfer_failed(error=err)
 
         except (BadHostKeyException, AuthenticationException, SSHException, socket.error) as err:
-            self._transfer_failed(message=str(err))
-            traceback.print_exc()
-            raise err
+            self._transfer_failed(error=err)
+
 
         except PasswordRequiredException as err:
             # TODO handle Kerberos not initialized exception
@@ -98,9 +97,7 @@ class SSHRunner(ITransferRunner):
             raise err
 
         except Exception as err:
-            self._transfer_failed(message=str(err))
-            traceback.print_exc()
-            raise err
+            self._transfer_failed(error=err)
 
     def _communicate(self, channel):
         """
@@ -187,8 +184,7 @@ class SSHRunner(ITransferRunner):
                         buffersize = max(buffersize / 2, 1)
             except socket.timeout as err:
                 buffersize = max(buffersize / 2, 1)
-                traceback.print_exc()
-                raise err
+                self._transfer_failed(error=err)
 
     def _monitor_rest(self, information):
         """
@@ -255,7 +251,7 @@ class SSHRunner(ITransferRunner):
 
         return None
 
-    def _transfer_failed(self, message=""):
+    def _transfer_failed(self, error):
         """
         Call the needed methods to update the status of the transfer to FAILED.
 
@@ -265,8 +261,12 @@ class SSHRunner(ITransferRunner):
 
         :return None
         """
+        traceback.print_exc()
+        self.error_bucket.put(sys.exc_info())
+        raise error
+
+        # self._update_status("FAILED")
         # self._update_log()
-        self._update_status("FAILED")
         # TODO configure the methods
 
     def _transfer_started(self):

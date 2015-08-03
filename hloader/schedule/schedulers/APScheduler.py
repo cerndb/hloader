@@ -12,8 +12,10 @@ from hloader.db.DatabaseManager import DatabaseManager
 from hloader.db.connectors.sqlaentities.Transfer import Transfer
 
 from threading import Lock
-
+import Queue
+import traceback
 import logging
+
 logging.basicConfig()
 
 
@@ -168,16 +170,28 @@ def tick(job):
     try:
         APScheduler.mutex.acquire()
 
+        error_bucket = Queue.Queue()
+
         transfer = DatabaseManager.meta_connector.get_transfers(job_id=job.job_id)[-1]
         DatabaseManager.meta_connector.modify_status(transfer, Transfer.Status.RUNNING)
-        runner = SSHRunner(job, transfer)
+        runner = SSHRunner(job, transfer, error_bucket)
 
         APScheduler.mutex.release()
 
         runner.start()
 
     except Exception as err:
-        # Send a EVENT_JOB_ERROR signal to the event listener
+        # Catch exceptions raised in DatabaseManager, if any
         raise err
 
     runner.join()
+
+    # Send a EVENT_JOB_ERROR signal to the event listener if spawned thread returned after raising an exception
+    try:
+        exc = error_bucket.get(block=False)
+    except Queue.Empty:
+        pass
+    else:
+        exc_type, exc_obj, exc_trace = exc
+        traceback.print_exception(exc_type, exc_obj, exc_trace)
+        raise exc_obj

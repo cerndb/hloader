@@ -20,9 +20,10 @@ class ITransferRunner(threading.Thread):
     :type _job: Job
     """
 
-    def __init__(self, job, transfer):
+    def __init__(self, job, transfer, error_bucket):
         self._job = job
         self._transfer = transfer
+        self.error_bucket = error_bucket
         threading.Thread.__init__(self)
 
     def run(self):
