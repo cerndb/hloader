@@ -1,4 +1,4 @@
-from hloader.config import AUTH_TABLE, AUTH_USERNAME_ATTR, AUTH_SCHEMA_ATTR
+from hloader.config import AUTH_TABLE, AUTH_USERNAME_ATTR, AUTH_SCHEMA_ATTR, AUTH_DATABASE_ATTR
 
 __author__ = 'dstein'
 import cx_Oracle
@@ -18,14 +18,31 @@ class OracleAuthConnector(object):
         try:
             connection = self._connect()
             cursor = connection.cursor()
-            cursor.prepare("select * from {TABLENAME} where {USERNAME_ATTR} = :username".format(
+
+            query = "select {DATABASE_ATTR}, {SCHEMA_ATTR} from {TABLENAME} where {USERNAME_ATTR} = :username".format(
                 TABLENAME=AUTH_TABLE,
-                USERNAME_ATTR=AUTH_USERNAME_ATTR
-            ))
+                USERNAME_ATTR=AUTH_USERNAME_ATTR,
+                DATABASE_ATTR=AUTH_DATABASE_ATTR,
+                SCHEMA_ATTR=AUTH_SCHEMA_ATTR
+            )
+            cursor.prepare(query)
             cursor.execute(None, {'username': username})
-            result = cursor.fetchall()
+
+            raw = cursor.fetchall()
+
+            databases = {}
+
+            for (database, schema) in raw:
+                if database not in databases:
+                    databases.update({database: {"database": database, "schemas": []}})
+
+                databases[database]["schemas"].append(schema)
+
+            result = {"databases": databases.values()}
+
         except Exception as e:
             return str(e)
+
         finally:
             cursor.close()
             connection.close()
@@ -40,15 +57,21 @@ class OracleAuthConnector(object):
                 "select count(*) from {TABLENAME} where {USERNAME_ATTR} = :username and {DATABASE_ATTR} = :database and {SCHEMA_ATTR} = :schema".format(
                     TABLENAME=AUTH_TABLE,
                     USERNAME_ATTR=AUTH_USERNAME_ATTR,
+                    DATABASE_ATTR=AUTH_DATABASE_ATTR,
                     SCHEMA_ATTR=AUTH_SCHEMA_ATTR
                 )
             )
             cursor.execute(None, {'login': username, 'database': database, 'schema': schema})
             result = cursor.fetchall()[0][0]
+
+            try:
+                return int(result) > 0
+            except Exception:
+                return False
+
         except Exception as e:
+            # TODO raise
             return str(e)
         finally:
             cursor.close()
             connection.close()
-
-        return result

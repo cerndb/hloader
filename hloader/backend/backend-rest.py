@@ -21,7 +21,7 @@ from hloader.backend.api import app  # initialize the application in hloader.bac
 from hloader.backend.api.v1 import views  # load all the views and set the api to v1 in hloader.backend.api.v1
 
 if __name__ == "__main__":
-    # app.run()
-    WSGIServer(app).run()
+    app.run()
+    # WSGIServer(app).run()
 
 views.__author__  # placeholder, so the views initializer script won't get deleted by accidental auto-formatting

@@ -6,10 +6,9 @@ __author__ = 'dstein'
 
 from hloader.backend.api.v1.views import index
 from hloader.backend.api.v1.views import headers
-from hloader.backend.api.v1.views import secret
 from hloader.backend.api.v1.views import servers
-from hloader.backend.api.v1.views import packages
-from hloader.backend.api.v1.views import auth
+from hloader.backend.api.v1.views import schemas
+from hloader.backend.api.v1.views import jobs
 
 # @app.route('/<path:path>')
 # def index(path):
