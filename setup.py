@@ -1,3 +1,4 @@
+from distutils.core import setup
 from pip.req import parse_requirements
 
 # parse_requirements() returns generator of pip.req.InstallRequirement objects
