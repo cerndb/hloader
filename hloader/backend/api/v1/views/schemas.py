@@ -36,8 +36,8 @@ def api_v1_schemas():
 def api_v1_schemas_views(database, schema):
     # TODO
     # if not DatabaseManager.auth_connector.can_user_access_schema(get_username(request.remote_user), database, schema):
-    if not DatabaseManager.auth_connector.can_user_access_schema(get_username("CERN\kdziedzi"), database, schema):
-        abort(403)
+    # if not DatabaseManager.auth_connector.can_user_access_schema(get_username("CERN\kdziedzi"), database, schema):
+    #     abort(403)
 
     objects = DatabaseManager.auth_connector.get_available_objects(database, schema)
 
