@@ -9,7 +9,7 @@ __author__ = 'dstein'
 
 
 @app.route('/api/v1/jobs')
-def api_v1_servers():
+def api_v1_jobs():
     kwargs = {k: request.args[k] for k in
               ('server_id', 'server_address', 'server_port', 'server_name', 'limit', 'offset') if k in request.args}
     session = DatabaseManager.meta_connector.create_session()

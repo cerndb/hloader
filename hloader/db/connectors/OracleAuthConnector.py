@@ -19,14 +19,16 @@ class OracleAuthConnector(object):
             connection = self._connect()
             cursor = connection.cursor()
 
-            query = "select {DATABASE_ATTR}, {SCHEMA_ATTR} from {TABLENAME} where {USERNAME_ATTR} = :username".format(
+            query = "select {DATABASE_ATTR}, {SCHEMA_ATTR} from {TABLENAME} where upper({USERNAME_ATTR}) = :username".format(
                 TABLENAME=AUTH_TABLE,
                 USERNAME_ATTR=AUTH_USERNAME_ATTR,
                 DATABASE_ATTR=AUTH_DATABASE_ATTR,
                 SCHEMA_ATTR=AUTH_SCHEMA_ATTR
             )
             cursor.prepare(query)
-            cursor.execute(None, {'username': username})
+            cursor.execute(None, {
+                'username': username.upper()
+            })
 
             raw = cursor.fetchall()
 
@@ -54,20 +56,49 @@ class OracleAuthConnector(object):
             connection = self._connect()
             cursor = connection.cursor()
             cursor.prepare(
-                "select count(*) from {TABLENAME} where {USERNAME_ATTR} = :username and {DATABASE_ATTR} = :database and {SCHEMA_ATTR} = :schema".format(
+                "select count(*) from {TABLENAME} where upper({USERNAME_ATTR}) = :username and upper({DATABASE_ATTR}) = :database and upper({SCHEMA_ATTR}) = :schema".format(
                     TABLENAME=AUTH_TABLE,
                     USERNAME_ATTR=AUTH_USERNAME_ATTR,
                     DATABASE_ATTR=AUTH_DATABASE_ATTR,
                     SCHEMA_ATTR=AUTH_SCHEMA_ATTR
                 )
             )
-            cursor.execute(None, {'login': username, 'database': database, 'schema': schema})
+            cursor.execute(None, {
+                'username': username.upper(),
+                'database': database.upper(),
+                'schema': schema.upper()
+            })
             result = cursor.fetchall()[0][0]
 
             try:
                 return int(result) > 0
             except Exception:
                 return False
+
+        except Exception as e:
+            # TODO raise
+            # return str(e)
+            return False
+        finally:
+            cursor.close()
+            connection.close()
+
+    def get_available_objects(self, database, schema):
+        try:
+            connection = self._connect()
+            cursor = connection.cursor()
+            cursor.prepare(
+                "select OBJECT_NAME, OBJECT_TYPE from table(cern_dba.get_user_objects(:database_name,:schema_name))"
+            )
+            cursor.execute(None, {
+                'database_name': database.upper(),
+                'schema_name': schema.upper()
+            })
+
+            raw = cursor.fetchall()
+
+            result = map(lambda line: line[0], raw)
+            return result
 
         except Exception as e:
             # TODO raise
