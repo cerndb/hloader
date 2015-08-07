@@ -1,39 +1,47 @@
 import json
 
-from flask import request, Response
+from flask import Response
 
 from hloader.backend.api import app
+from hloader.backend.api.v1.util.json_datetime_handler_default import json_datetime_handler_default
+from hloader.backend.api.v1.util.get_username import get_username
 from hloader.db.DatabaseManager import DatabaseManager
 
 __author__ = 'dstein'
 
 
-@app.route('/api/v1/jobs')
-def api_v1_jobs():
-    kwargs = {k: request.args[k] for k in
-              ('server_id', 'server_address', 'server_port', 'server_name', 'limit', 'offset') if k in request.args}
-    session = DatabaseManager.meta_connector.create_session()
-    servers = DatabaseManager.meta_connector.get_servers(_session=session, **kwargs)
+@app.route('/api/v1/jobs', methods=['GET'])
+def api_v1_get_jobs():
+    # TODO if the user is an administrator for the system, allow them to see every job
+    # kwargs = {"owner_username": get_username(request.remote_user)}
+    kwargs = {"owner_username": get_username("CERN\kdziedzi")}
 
-    result = map_(servers)
+    jobs = DatabaseManager.meta_connector.get_jobs(**kwargs)
 
-    return Response(json.dumps(result, indent=4), mimetype="application/json")
+    filter_key_list = [
+        "job_id",
+        "source_server_id",
+        "source_schema_name",
+        "source_object_name",
+        "destination_cluster_id",
+        "destination_path",
+        "owner_username",
+        "sqoop_nmap",
+        "sqoop_splitting_column",
+        "sqoop_incremental_method",
+        "sqoop_direct",
+        "start_time",
+        "interval",
+    ]
 
+    result = {
+        "jobs": map(
+            lambda job: {
+                key: getattr(job, key, None)
+                for key in filter_key_list
+                },
+            jobs
+        )
+    }
 
-def filter_(servers):
-    return servers
-
-
-def map_(servers):
-    result = {"servers": []}
-    for server in servers:
-        s = {
-            "server_id": server.server_id,
-            "server_address": server.server_address,
-            "server_port": server.server_port,
-            "server_name": server.server_name
-        }
-
-        result["servers"].append({int(server.server_id): s})
-
-    return result
+    return Response(json.dumps(result, indent=4, default=json_datetime_handler_default), mimetype="application/json")
