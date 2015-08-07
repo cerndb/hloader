@@ -92,9 +92,8 @@ class SSHRunner(ITransferRunner):
         except PasswordRequiredException as err:
             # TODO handle Kerberos not initialized exception
             print("Kerberos is not initialized")
-            traceback.print_exc()
             # TODO automatically fix and restart the transfer?
-            raise err
+            self._transfer_failed(error=err)
 
         except Exception as err:
             self._transfer_failed(error=err)
@@ -157,6 +156,10 @@ class SSHRunner(ITransferRunner):
                             for line in split[:-1]:
                                 lines.append(line)
                                 print(line)
+
+                                if "ERROR" in line:
+                                    self._transfer_failed('Exception in remote cluster')
+
                                 # If the given line contains information about the tracking URL, or the job ID,
                                 # extract the value. If both extracted, automatically start monitoring.
                                 if "The url to track the job:" in line:
@@ -261,9 +264,13 @@ class SSHRunner(ITransferRunner):
 
         :return None
         """
-        traceback.print_exc()
-        self.error_bucket.put(sys.exc_info())
-        raise error
+        # traceback.print_exc()
+        exc = sys.exc_info()
+        if exc[1]:
+            self.error_bucket.put(exc)
+            raise error
+        else:
+            self.error_bucket.put([None, error, None])
 
         # self._update_status("FAILED")
         # self._update_log()

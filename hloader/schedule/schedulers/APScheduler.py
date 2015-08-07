@@ -168,22 +168,17 @@ class APScheduler(ITransferScheduler):
 # For serialising the Job and getting a textual reference to the function, we need to keep it outside any class
 
 def tick(job):
-    try:
-        APScheduler.mutex.acquire()
+    APScheduler.mutex.acquire()
 
-        error_bucket = Queue.Queue()
+    error_bucket = Queue.Queue()
 
-        transfer = DatabaseManager.meta_connector.get_transfers(job_id=job.job_id)[-1]
-        DatabaseManager.meta_connector.modify_status(transfer, Transfer.Status.RUNNING)
-        runner = SSHRunner(job, transfer, error_bucket)
+    transfer = DatabaseManager.meta_connector.get_transfers(job_id=job.job_id)[-1]
+    DatabaseManager.meta_connector.modify_status(transfer, Transfer.Status.RUNNING)
+    runner = SSHRunner(job, transfer, error_bucket)
 
-        APScheduler.mutex.release()
+    APScheduler.mutex.release()
 
-        runner.start()
-
-    except Exception as err:
-        # Catch exceptions raised in DatabaseManager, if any
-        raise err
+    runner.start()
 
     runner.join()
 
@@ -194,5 +189,4 @@ def tick(job):
         pass
     else:
         exc_type, exc_obj, exc_trace = exc
-        traceback.print_exception(exc_type, exc_obj, exc_trace)
-        raise exc_obj
+        raise Exception(exc_obj)
