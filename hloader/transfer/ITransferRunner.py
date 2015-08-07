@@ -5,6 +5,7 @@ from __future__ import absolute_import
 import logging
 import os
 import threading
+from hloader.config import CLUSTER_BASE_PATH
 
 from hloader.entities.Job import Job
 from hloader.db.DatabaseManager import DatabaseManager
@@ -153,10 +154,14 @@ class ITransferRunner(threading.Thread):
         command.append("--target-dir")
         # TODO put the right base path here, maybe check the target directory
         command.append(
-            "/user/playground/{schema}/{object}/{relative}".format(
+            "{base}/{user}/{database}/{schema}/{object}/{relative}".format(
+                base=CLUSTER_BASE_PATH,
+                user=self._job.owner_username,
+                database=self._job.get_source_server().server_name,
                 schema=self._job.source_schema_name,
                 object=self._job.source_object_name,
-                relative=self._job.destination_path)
+                relative=self._job.destination_path,
+            )
         )
 
         # --warehouse-dir <dir>

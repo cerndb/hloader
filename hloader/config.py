@@ -8,3 +8,5 @@ AUTH_DATABASE_ATTR = 'database_name'
 AUTH_SCHEMA_ATTR = 'login'
 
 DEBUG = False
+
+CLUSTER_BASE_PATH = "/user/playground"
