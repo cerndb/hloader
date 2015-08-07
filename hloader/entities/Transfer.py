@@ -1,5 +1,4 @@
 from __future__ import absolute_import
-from datetime import datetime
 
 
 class Transfer(object):
@@ -9,6 +8,7 @@ class Transfer(object):
     transfer_start = None
     transfer_status = None
     transfer_last_update = None
+    last_modified_value = None
 
     class Status(object):
         # Status class for transfers

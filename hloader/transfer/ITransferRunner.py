@@ -146,16 +146,16 @@ class ITransferRunner(threading.Thread):
         # --table <table-name>
         #         Table to read
         command.append("--table")
-        command.append(self._job.source_table_name)
+        command.append(self._job.source_object_name)
 
         # --target-dir <dir>
         #         HDFS destination dir
         command.append("--target-dir")
         # TODO put the right base path here, maybe check the target directory
         command.append(
-            "/user/playground/{dbname}/{tablename}/{relative}".format(
-                dbname=self._job.source_database_name,
-                tablename=self._job.source_table_name,
+            "/user/playground/{schema}/{object}/{relative}".format(
+                schema=self._job.source_schema_name,
+                object=self._job.source_object_name,
                 relative=self._job.destination_path)
         )
 
@@ -192,8 +192,8 @@ class ITransferRunner(threading.Thread):
 
     def generate_connection_string(self):
         server = DatabaseManager.meta_connector.get_servers(server_id=self._job.source_server_id)[0]
-        connection_string = "jdbc:oracle:thin:@{address}:{port}/{dbname}".format(address=server.server_address,
+        connection_string = "jdbc:oracle:thin:@{address}:{port}/{schema}".format(address=server.server_address,
                                                                                  port=server.server_port,
-                                                                                 dbname=self._job.source_database_name)
+                                                                                 schema=self._job.source_schema_name)
 
         return connection_string

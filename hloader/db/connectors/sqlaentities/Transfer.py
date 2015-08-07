@@ -22,6 +22,7 @@ class Transfer(Base, Transfer):
                             default=datetime.now())  # TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     transfer_last_update = Column(DateTime(timezone=True),
                                   onupdate=datetime.now())  # TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    last_modified_value = Column(String, nullable=False)  # TEXT NOT NULL
 
     # TODO create a new Transfer status table
 

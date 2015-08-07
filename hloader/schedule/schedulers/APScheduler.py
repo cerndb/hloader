@@ -53,6 +53,7 @@ class APScheduler(ITransferScheduler):
 
         print("[Schedule Manager] Listening to all Transfer events")
         APScheduler.scheduler.add_listener(self.event_listener, events.EVENT_ALL)
+        # TODO call to super __init__ ?
 
     def start(self):
         APScheduler.scheduler.start()
