@@ -196,7 +196,7 @@ class ITransferRunner(threading.Thread):
         return command_string
 
     def generate_connection_string(self):
-        server = DatabaseManager.meta_connector.get_servers(server_id=self._job.source_server_id)[0]
+        server = self._job.get_source_server()
         connection_string = "jdbc:oracle:thin:@{address}:{port}/{schema}".format(address=server.server_address,
                                                                                  port=server.server_port,
                                                                                  schema=self._job.source_schema_name)

@@ -30,8 +30,8 @@ class Job(Base, Job):
     start_time = Column(DateTime(timezone=True), nullable=False)  # INTEGER NOT NULL,
     interval = Column(Interval, nullable=False)  # INTEGER NOT NULL
 
-    source_server = relationship("hloader.db.connectors.sqlaentities.OracleServer.OracleServer")
-    destination_cluster = relationship("hloader.db.connectors.sqlaentities.HadoopCluster.HadoopCluster")
+    source_server = relationship("hloader.db.connectors.sqlaentities.OracleServer.OracleServer", lazy='joined')
+    destination_cluster = relationship("hloader.db.connectors.sqlaentities.HadoopCluster.HadoopCluster", lazy='joined')
     transfers = relationship("hloader.db.connectors.sqlaentities.Transfer.Transfer")
 
     def get_source_server(self):
