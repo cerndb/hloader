@@ -71,6 +71,9 @@ class IDatabaseConnector(object):
         """
         raise Exception("Not implemented.")
 
+    def get_recently_touched_jobs(self, polling_factor):
+        pass
+
     #
     # Inner methods
     # ------------------------------------------------------------------------------------------------------------------

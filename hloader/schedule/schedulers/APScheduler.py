@@ -11,9 +11,8 @@ from hloader.transfer.runners.SSHRunner import SSHRunner
 from hloader.db.DatabaseManager import DatabaseManager
 from hloader.db.connectors.sqlaentities.Transfer import Transfer
 
-from threading import Lock
+import threading
 import Queue
-import traceback
 import logging
 
 logging.basicConfig()
@@ -21,7 +20,7 @@ logging.basicConfig()
 
 class APScheduler(ITransferScheduler):
     scheduler = None
-    mutex = Lock()
+    mutex = threading.Lock()
 
     def __init__(self):
         self.settings = {
@@ -84,7 +83,11 @@ class APScheduler(ITransferScheduler):
 
         APScheduler.mutex.release()
 
-    def remove_transfer(self, scheduler_transfer_id):
+    def get_scheduler_transfers(self):
+        return [each.id for each in APScheduler.scheduler.get_jobs()]
+
+    @staticmethod
+    def remove_transfer(scheduler_transfer_id):
         """
         Remove a transfer, and prevent it from being run any more.
         :param scheduler_transfer_id: Transfer ID used by the scheduler in its job store
@@ -169,6 +172,14 @@ class APScheduler(ITransferScheduler):
 
 def tick(job):
     APScheduler.mutex.acquire()
+
+    if not DatabaseManager.meta_connector.get_jobs(job_id=job.job_id):
+        APScheduler.remove_transfer(DatabaseManager
+                                    .meta_connector
+                                    .get_transfers(job_id=job.job_id, order='transfer_id')[-1]
+                                    .scheduler_transfer_id)
+
+        raise Exception("[Schedule Manager] Job doesn't exist")
 
     error_bucket = Queue.Queue()
 

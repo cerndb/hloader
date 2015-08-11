@@ -22,7 +22,11 @@ class ITransferScheduler(object):
         """
         pass
 
-    def remove_transfer(self, scheduler_transfer_id):
+    def get_scheduler_transfers(self):
+        pass
+
+    @staticmethod
+    def remove_transfer(scheduler_transfer_id):
         """
         Remove a transfer, and prevent it from being run any more.
         :param scheduler_transfer_id: Transfer ID used by the scheduler in its job store

@@ -1,5 +1,8 @@
 from __future__ import absolute_import
 
+import threading
+import datetime
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
 
@@ -79,14 +82,26 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
         limit = kwargs.pop('limit', None)
         offset = kwargs.pop('offset', 0)
 
+        order = kwargs.pop('order', None)
+
+        if order:
+            order = getattr(OracleServer, order)
+
         for key, value in kwargs.items():
             if value is None:
                 kwargs.pop(key, None)
 
         if len(kwargs):
-            result = _inner_session.query(OracleServer).filter_by(**kwargs).limit(limit).offset(offset).all()
+            result = _inner_session.query(OracleServer)\
+                .filter_by(**kwargs)\
+                .order_by(order)\
+                .limit(limit)\
+                .offset(offset)\
+                .all()
+
         else:
-            result = _inner_session.query(OracleServer).limit(limit).offset(offset).all()
+            result = _inner_session.query(OracleServer).order_by(order).limit(limit).offset(offset).all()
+
 
         if not _session:
             _inner_session_registry.remove()
@@ -110,14 +125,26 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
         limit = kwargs.pop('limit', None)
         offset = kwargs.pop('offset', 0)
 
+        order = kwargs.pop('order', None)
+
+        if order:
+            order = getattr(HadoopCluster, order)
+
         for key, value in kwargs.items():
             if value is None:
                 kwargs.pop(key, None)
 
         if len(kwargs):
-            result = _inner_session.query(HadoopCluster).filter_by(**kwargs).limit(limit).offset(offset).all()
+            result = _inner_session.query(HadoopCluster)\
+                .filter_by(**kwargs)\
+                .order_by(order)\
+                .limit(limit)\
+                .offset(offset)\
+                .all()
+
         else:
-            result = _inner_session.query(HadoopCluster).limit(limit).offset(offset).all()
+            result = _inner_session.query(HadoopCluster).order_by(order).limit(limit).offset(offset).all()
+
 
         if not _session:
             _inner_session_registry.remove()
@@ -147,14 +174,25 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
         limit = kwargs.pop('limit', None)
         offset = kwargs.pop('offset', 0)
 
+        order = kwargs.pop('order', None)
+
+        if order:
+            order = getattr(Job, order)
+
         for key, value in kwargs.items():
             if value is None:
                 kwargs.pop(key, None)
 
         if len(kwargs):
-            result = _inner_session.query(Job).filter_by(**kwargs).limit(limit).offset(offset).all()
+            result = _inner_session.query(Job)\
+                .filter_by(**kwargs)\
+                .order_by(order)\
+                .limit(limit)\
+                .offset(offset)\
+                .all()
+
         else:
-            result = _inner_session.query(Job).limit(limit).offset(offset).all()
+            result = _inner_session.query(Job).order_by(order).limit(limit).offset(offset).all()
 
         if not _session:
             _inner_session_registry.remove()
@@ -190,12 +228,8 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
 
         order = kwargs.pop('order', None)
 
-        parameter_map = {
-            'transfer_id': "Transfer.transfer_id"
-        }
-
         if order:
-            order = getattr(self, parameter_map[order.split('.')[0]] + "." + order.split('.')[1])
+            order = getattr(Transfer, order)
 
         for key, value in kwargs.items():
             if value is None:
@@ -204,12 +238,13 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
         if len(kwargs):
             result = _inner_session.query(Transfer)\
                 .filter_by(**kwargs)\
-                .limit(limit)\
                 .order_by(order)\
+                .limit(limit)\
                 .offset(offset)\
                 .all()
+
         else:
-            result = _inner_session.query(Transfer).limit(limit).offset(offset).all()
+            result = _inner_session.query(Transfer).order_by(order).limit(limit).offset(offset).all()
 
             # TODO: state handling
 
@@ -257,6 +292,22 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
     #         )).all()
     #
     #     return self._session.query(Job).filter(or_(Job.transfers))
+
+    def get_recently_touched_jobs(self, polling_factor, _session=None):
+        if not _session:
+            _inner_session_registry = self.create_session()
+            _inner_session = _inner_session_registry()
+        else:
+            _inner_session = _session
+
+        result = _inner_session.query(Job)\
+            .filter(Job.job_last_update > (datetime.datetime.now() - datetime.timedelta(seconds=polling_factor)))\
+            .all()
+
+        if not _session:
+            _inner_session_registry.remove()
+
+        return result
 
     def get_log(self, transfer, source, _session=None):
         """
@@ -312,6 +363,22 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
         if not _session:
             _inner_session.commit()
             _inner_session_registry.remove()
+
+    def add_job(self, job, _session=None):
+        if not _session:
+            _inner_session_registry = self.create_session()
+            _inner_session = _inner_session_registry()
+        else:
+            _inner_session = _session
+
+        _inner_session.add(job)
+
+        if not _session:
+            _inner_session.commit()
+            _inner_session_registry.remove()
+
+        return job
+
 
     def create_transfer(self, job, transfer_instance_id, _session=None):
         # TODO
