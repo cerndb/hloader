@@ -34,14 +34,16 @@ def api_v1_get_jobs():
         "interval",
     ]
 
-    result = {
-        "jobs": map(
-            lambda job: {
-                key: getattr(job, key, None)
-                for key in filter_key_list
-                },
-            jobs
-        )
-    }
+    result = {"jobs": []}
+
+    for job in jobs:
+        j = {}
+        for key in filter_key_list:
+            j.update({key: getattr(job, key, None)})
+
+        j.update({"source_server_alias": job.source_server.server_name})
+        j.update({"destination_cluster_alias": job.destination_cluster.cluster_name})
+
+        result["jobs"].append(j)
 
     return Response(json.dumps(result, indent=4, default=json_datetime_handler_default), mimetype="application/json")

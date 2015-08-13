@@ -34,6 +34,6 @@ def map_(servers):
             "server_name": server.server_name
         }
 
-        result["servers"].append({int(server.server_id): s})
+        result["servers"].append(s)
 
     return result
