@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 from abc import abstractmethod
+from abc import ABCMeta
 
-from hloader.entities.Job import Job
 from hloader.entities.Transfer import Transfer
 
 __author__ = 'dstein'
@@ -19,6 +19,8 @@ class IDatabaseConnector(object):
     #
     # REST API data source methods
     # ------------------------------------------------------------------------------------------------------------------
+    __metaclass__ = ABCMeta
+
     def create_session(self):
         pass
 
@@ -133,3 +135,17 @@ class IDatabaseConnector(object):
         :return:
         """
         pass
+
+    def create_job(self):
+        # TODO
+        """
+
+        :return:
+        :rtype Job
+        """
+        pass
+
+    @abstractmethod
+    def add_job(self, job, _session):
+        pass
+

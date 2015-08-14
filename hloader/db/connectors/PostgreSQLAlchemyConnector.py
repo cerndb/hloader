@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 
-import threading
 import datetime
 
 from sqlalchemy import create_engine
@@ -364,6 +363,9 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
             _inner_session.commit()
             _inner_session_registry.remove()
 
+    def create_job(self):
+        return Job()
+
     def add_job(self, job, _session=None):
         if not _session:
             _inner_session_registry = self.create_session()
@@ -372,12 +374,16 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
             _inner_session = _session
 
         _inner_session.add(job)
+        _inner_session.flush()
+
+        _inner_session.refresh(job)
+        result = job.job_id
 
         if not _session:
             _inner_session.commit()
             _inner_session_registry.remove()
 
-        return job
+        return result
 
 
     def create_transfer(self, job, transfer_instance_id, _session=None):
