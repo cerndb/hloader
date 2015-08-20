@@ -78,10 +78,20 @@ class APScheduler(ITransferScheduler):
         # Mutex implementation to add atomicity to the below operations.
         APScheduler.mutex.acquire()
 
-        transfer_instance = APScheduler.scheduler.add_job(tick, trigger, [job], **kwargs)
+        transfer_instance = APScheduler.scheduler.add_job(func=tick, trigger=trigger, args=[job], **kwargs)
         DatabaseManager.meta_connector.create_transfer(job, transfer_instance.id)
 
         APScheduler.mutex.release()
+
+    def modify_job(self, job, trigger, **kwargs):
+        # Mutex implementation to add atomicity to the below operations.
+        APScheduler.mutex.acquire()
+
+        scheduler_transfer_id = DatabaseManager.meta_connector.get_transfers(job_id=job.job_id)[0].scheduler_transfer_id
+        APScheduler.scheduler.modify_job(job_id=scheduler_transfer_id, func=tick, trigger=trigger, args=[job], **kwargs)
+
+        APScheduler.mutex.release()
+
 
     def get_scheduler_transfers(self):
         return [each.id for each in APScheduler.scheduler.get_jobs()]
