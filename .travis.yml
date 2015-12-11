@@ -11,3 +11,19 @@ install: "pip install -r requirements.txt"
 
 # command to run tests
 script: nosetests
+
+sudo: required
+services:
+  - docker
+
+before_install:
+  # run docker image with oracle XE db
+  - docker pull wnameless/oracle-xe-11g
+  - docker run -d -p 49160:22 -p 49161:1521 wnameless/oracle-xe-11g
+  - docker ps -a
+
+  # install oracle instant client
+  - sudo apt-get install alien
+  - sudo alien -i travis-resources/oracle-instantclient*-basic-*.rpm
+
+
