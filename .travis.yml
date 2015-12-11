@@ -1,0 +1,31 @@
+language: python
+python:
+  - "2.7"
+#  - "3.2"
+#  - "3.3"
+#  - "3.4"
+#  - "3.5"
+
+sudo: required
+services:
+  - docker
+
+before_install:
+  - sudo apt-get update -qq
+
+  # install oracle instant client
+  - sudo apt-get install alien libaio-dev python-dev -y
+  - sudo alien -i travis-resources/oracle-instantclient*.rpm
+  - export ORACLE_HOME=/usr/lib/oracle/12.1/client64
+  - export LD_LIBRARY_PATH=/usr/lib/oracle/12.1/client64/lib
+
+  # run docker image with oracle XE db
+  #- docker pull wnameless/oracle-xe-11g
+  #- docker run -d -p 49160:22 -p 49161:1521 wnameless/oracle-xe-11g
+  #- docker ps -a
+
+# command to install dependencies
+install: "pip install -r requirements.txt"
+
+# command to run tests
+script: nosetests
