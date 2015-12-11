@@ -17,13 +17,16 @@ services:
   - docker
 
 before_install:
+  - sudo apt-get update -qq
+
+  # install oracle instant client
+  - sudo apt-get install rpm alien
+  - sudo alien -i travis-resources/oracle-instantclient*-basic-*.rpm
+
   # run docker image with oracle XE db
   - docker pull wnameless/oracle-xe-11g
   - docker run -d -p 49160:22 -p 49161:1521 wnameless/oracle-xe-11g
   - docker ps -a
 
-  # install oracle instant client
-  - sudo apt-get install alien
-  - sudo alien -i travis-resources/oracle-instantclient*-basic-*.rpm
 
 
