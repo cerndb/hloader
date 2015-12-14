@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 from flask import Flask
 from flask.ext.cors import CORS
 
