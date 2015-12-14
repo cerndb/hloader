@@ -5,7 +5,6 @@ from __future__ import absolute_import
 import logging
 import os
 import threading
-from hloader.config import CLUSTER_BASE_PATH
 
 from hloader.entities.Job import Job
 from hloader.db.DatabaseManager import DatabaseManager
@@ -15,6 +14,9 @@ __author__ = 'dstein'
 
 logging.basicConfig()
 
+from ConfigParser import SafeConfigParser
+parser = SafeConfigParser()
+parser.read("config.ini")
 
 class ITransferRunner(threading.Thread):
     """

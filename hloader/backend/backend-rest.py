@@ -7,16 +7,29 @@ sys.path.insert(0, "//cern.ch/dfs/websites/t/test-hloader-server/hloader/backend
 from flup.server.cgi import WSGIServer
 
 from hloader.db.DatabaseManager import DatabaseManager
-from hloader.config import AUTH_ALIAS, AUTH_PORT, AUTH_USERNAME, AUTH_PASSWORD, AUTH_SID
-from hloader.config import POSTGRE_ADDRESS, POSTGRE_DATABASE, POSTGRE_PASSWORD, POSTGRE_PORT, POSTGRE_USERNAME
+from ConfigParser import SafeConfigParser
+parser = SafeConfigParser()
+parser.read("config.ini")
 
-if not (POSTGRE_ADDRESS and POSTGRE_PORT and POSTGRE_USERNAME and POSTGRE_PASSWORD and POSTGRE_DATABASE):
+if not (parser.get('default', 'POSTGRE_ADDRESS') and
+        parser.get('default', 'POSTGRE_PORT') and
+        parser.get('default', 'POSTGRE_USERNAME') and
+        parser.get('default', 'POSTGRE_PASSWORD') and
+        parser.get('default', 'POSTGRE_DATABASE')):
     raise Exception("Config not properly set up.")
 
 DatabaseManager.connect_meta("PostgreSQLA",
-                             POSTGRE_ADDRESS, POSTGRE_PORT, POSTGRE_USERNAME, POSTGRE_PASSWORD, POSTGRE_DATABASE)
+                             parser.get('default', 'POSTGRE_ADDRESS'),
+                             parser.get('default', 'POSTGRE_PORT'),
+                             parser.get('default', 'POSTGRE_USERNAME'),
+                             parser.get('default', 'POSTGRE_PASSWORD'),
+                             parser.get('default', 'POSTGRE_DATABASE'))
 
-DatabaseManager.connect_auth(AUTH_ALIAS, AUTH_PORT, AUTH_USERNAME, AUTH_PASSWORD, AUTH_SID)
+DatabaseManager.connect_auth(parser.get('default', 'AUTH_ALIAS'),
+                             parser.get('default', 'AUTH_PORT'),
+                             parser.get('default', 'AUTH_USERNAME'),
+                             parser.get('default', 'AUTH_PASSWORD'),
+                             parser.get('default', 'AUTH_SID'))
 
 from hloader.backend.api import app  # initialize the application in hloader.backend.api
 from hloader.backend.api.v1 import views  # load all the views and set the api to v1 in hloader.backend.api.v1

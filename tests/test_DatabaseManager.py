@@ -1,17 +1,23 @@
 from __future__ import absolute_import
-
-from hloader.config import POSTGRE_ADDRESS, POSTGRE_DATABASE, POSTGRE_PASSWORD, POSTGRE_PORT, POSTGRE_USERNAME
-
 from hloader.db.DatabaseManager import DatabaseManager
 from hloader.db.connectors.PostgreSQLAlchemyConnector import PostgreSQLAlchemyConnector
 
 from sqlalchemy.orm import Session, scoped_session
 
+from ConfigParser import SafeConfigParser
+parser = SafeConfigParser()
+parser.read("config.ini")
 
 class TestPostgreSQLAlchemyConnector:
     def test_setup_database(self):
-        DatabaseManager.connect_meta("PostgreSQLA", POSTGRE_ADDRESS, POSTGRE_PORT, POSTGRE_USERNAME,
-                                     POSTGRE_PASSWORD, POSTGRE_DATABASE)
+
+        DatabaseManager.connect_meta("PostgreSQLA",
+                                     parser.get('default', 'POSTGRE_ADDRESS'),
+                                     parser.get('default', 'POSTGRE_PORT'),
+                                     parser.get('default', 'POSTGRE_USERNAME'),
+                                     parser.get('default', 'POSTGRE_PASSWORD'),
+                                     parser.get("default", "POSTGRE_DATABASE")
+                                     )
         DatabaseManager.meta_connector.setup_database()
         assert isinstance(DatabaseManager.meta_connector, PostgreSQLAlchemyConnector)
 

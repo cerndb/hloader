@@ -1,14 +1,20 @@
-from hloader.config import AUTH_TABLE, AUTH_USERNAME_ATTR, AUTH_SCHEMA_ATTR, AUTH_DATABASE_ATTR
 
 __author__ = 'dstein'
 import cx_Oracle
-
+from ConfigParser import SafeConfigParser
+parser = SafeConfigParser()
+parser.read("config.ini")
 
 class OracleAuthConnector(object):
     def __init__(self, address, port, username, password, SID):
         self._dsn = cx_Oracle.makedsn(address, port, SID)
         self._username = username
         self._password = password
+
+        self.AUTH_TABLE = parser.get('default', 'AUTH_TABLE')
+        self.AUTH_USERNAME_ATTR = parser.get('default', 'AUTH_USERNAME_ATTR')
+        self.AUTH_DATABASE_ATTR = parser.get('default', 'AUTH_DATABASE_ATTR')
+        self.AUTH_SCHEMA_ATTR = parser.get('default', 'AUTH_SCHEMA_ATTR')
 
     def _connect(self):
         connection = cx_Oracle.connect(user=self._username, password=self._password, dsn=self._dsn)
@@ -20,10 +26,10 @@ class OracleAuthConnector(object):
             cursor = connection.cursor()
 
             query = "select {DATABASE_ATTR}, {SCHEMA_ATTR} from {TABLENAME} where upper({USERNAME_ATTR}) = :username".format(
-                TABLENAME=AUTH_TABLE,
-                USERNAME_ATTR=AUTH_USERNAME_ATTR,
-                DATABASE_ATTR=AUTH_DATABASE_ATTR,
-                SCHEMA_ATTR=AUTH_SCHEMA_ATTR
+                TABLENAME=self.AUTH_TABLE,
+                USERNAME_ATTR=self.AUTH_USERNAME_ATTR,
+                DATABASE_ATTR=self.AUTH_DATABASE_ATTR,
+                SCHEMA_ATTR=self.AUTH_SCHEMA_ATTR
             )
             cursor.prepare(query)
             cursor.execute(None, {
@@ -57,10 +63,10 @@ class OracleAuthConnector(object):
             cursor = connection.cursor()
             cursor.prepare(
                 "select count(*) from {TABLENAME} where upper({USERNAME_ATTR}) = :username and upper({DATABASE_ATTR}) = :database and upper({SCHEMA_ATTR}) = :schema".format(
-                    TABLENAME=AUTH_TABLE,
-                    USERNAME_ATTR=AUTH_USERNAME_ATTR,
-                    DATABASE_ATTR=AUTH_DATABASE_ATTR,
-                    SCHEMA_ATTR=AUTH_SCHEMA_ATTR
+                    TABLENAME=self.AUTH_TABLE,
+                    USERNAME_ATTR=self.AUTH_USERNAME_ATTR,
+                    DATABASE_ATTR=self.AUTH_DATABASE_ATTR,
+                    SCHEMA_ATTR=self.AUTH_SCHEMA_ATTR
                 )
             )
             cursor.execute(None, {
