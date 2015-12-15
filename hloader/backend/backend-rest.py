@@ -5,29 +5,27 @@ sys.path.insert(0, "//cern.ch/dfs/websites/t/test-hloader-server/hloader/backend
 from flup.server.cgi import WSGIServer
 
 from hloader.db.DatabaseManager import DatabaseManager
-from ConfigParser import SafeConfigParser
-parser = SafeConfigParser()
-parser.read("config.ini")
+from hloader.config import Config
 
-if not (parser.get('default', 'POSTGRE_ADDRESS') and
-        parser.get('default', 'POSTGRE_PORT') and
-        parser.get('default', 'POSTGRE_USERNAME') and
-        parser.get('default', 'POSTGRE_PASSWORD') and
-        parser.get('default', 'POSTGRE_DATABASE')):
+if not (Config.POSTGRE_ADDRESS and
+        Config.POSTGRE_PORT and
+        Config.POSTGRE_USERNAME and
+        Config.POSTGRE_PASSWORD and
+        Config.POSTGRE_DATABASE):
     raise Exception("Config not properly set up.")
 
 DatabaseManager.connect_meta("PostgreSQLA",
-                             parser.get('default', 'POSTGRE_ADDRESS'),
-                             parser.get('default', 'POSTGRE_PORT'),
-                             parser.get('default', 'POSTGRE_USERNAME'),
-                             parser.get('default', 'POSTGRE_PASSWORD'),
-                             parser.get('default', 'POSTGRE_DATABASE'))
+                             Config.POSTGRE_ADDRESS,
+                             Config.POSTGRE_PORT,
+                             Config.POSTGRE_USERNAME,
+                             Config.POSTGRE_PASSWORD,
+                             Config.POSTGRE_DATABASE)
 
-DatabaseManager.connect_auth(parser.get('default', 'AUTH_ALIAS'),
-                             parser.get('default', 'AUTH_PORT'),
-                             parser.get('default', 'AUTH_USERNAME'),
-                             parser.get('default', 'AUTH_PASSWORD'),
-                             parser.get('default', 'AUTH_SID'))
+DatabaseManager.connect_auth(Config.AUTH_ALIAS,
+                             Config.AUTH_PORT,
+                             Config.AUTH_USERNAME,
+                             Config.AUTH_PASSWORD,
+                             Config.AUTH_SID)
 
 from hloader.backend.api import app  # initialize the application in hloader.backend.api
 from hloader.backend.api.v1 import views  # load all the views and set the api to v1 in hloader.backend.api.v1
