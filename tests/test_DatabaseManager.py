@@ -3,7 +3,7 @@ from hloader.db.connectors import PostgreSQLAlchemyConnector
 
 from sqlalchemy.orm import Session, scoped_session
 
-from hloader.config import Config
+from hloader.config import config
 
 class TestPostgreSQLAlchemyConnector:
     '''
