@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 import sys
 
 sys.path.insert(0, "//cern.ch/dfs/websites/t/test-hloader-server/hloader/backend/libs")
