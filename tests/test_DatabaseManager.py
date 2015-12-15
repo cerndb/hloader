@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-from hloader.db.DatabaseManager import DatabaseManager
+from hloader.db import DatabaseManager
 from hloader.db.connectors.PostgreSQLAlchemyConnector import PostgreSQLAlchemyConnector
 
 from sqlalchemy.orm import Session, scoped_session
