@@ -17,7 +17,7 @@ before_install:
   - sudo apt-get install alien -y
   - sudo alien -i travis-resources/oracle-instantclient*.rpm
   - export ORACLE_HOME=/usr/lib/oracle/12.1/client64
-  - export LD_LIBRARY_PATH=/usr/lib/oracle/12.1/client64
+  - export LD_LIBRARY_PATH=/usr/lib/oracle/12.1/client64/lib
 
   # run docker image with oracle XE db
   #- docker pull wnameless/oracle-xe-11g
