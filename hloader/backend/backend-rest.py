@@ -2,8 +2,6 @@ import sys
 
 sys.path.insert(0, "//cern.ch/dfs/websites/t/test-hloader-server/hloader/backend/libs")
 
-from flup.server.cgi import WSGIServer
-
 from hloader.db.DatabaseManager import DatabaseManager
 from hloader.config import config
 
@@ -32,6 +30,5 @@ from hloader.backend.api.v1 import views  # load all the views and set the api t
 
 if __name__ == "__main__":
     app.run()
-    # WSGIServer(app).run()
 
 views.__author__  # placeholder, so the views initializer script won't get deleted by accidental auto-formatting
