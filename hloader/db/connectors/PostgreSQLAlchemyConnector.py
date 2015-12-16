@@ -1,3 +1,11 @@
+from hloader.db.IDatabaseConnector import IDatabaseConnector
+from hloader.db.connectors.sqlaentities.HadoopCluster import HadoopCluster
+from hloader.db.connectors.sqlaentities.Job import Job
+from hloader.db.connectors.sqlaentities.Log import Log
+from hloader.db.connectors.sqlaentities.OracleServer import OracleServer
+from hloader.db.connectors.sqlaentities.Transfer import Transfer
+from hloader.config import config
+
 from __future__ import absolute_import
 
 import datetime
@@ -5,17 +13,7 @@ import datetime
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
 
-from hloader.db.IDatabaseConnector import IDatabaseConnector
-from hloader.db.connectors.sqlaentities.HadoopCluster import HadoopCluster
-from hloader.db.connectors.sqlaentities.Job import Job
-from hloader.db.connectors.sqlaentities.Log import Log
-from hloader.db.connectors.sqlaentities.OracleServer import OracleServer
-from hloader.db.connectors.sqlaentities.Transfer import Transfer
-
 __author__ = 'dstein'
-from ConfigParser import SafeConfigParser
-parser = SafeConfigParser()
-parser.read("config.ini")
 
 class PostgreSQLAlchemyConnector(IDatabaseConnector):
     """
@@ -37,7 +35,7 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
                 address=address,
                 port=port,
                 database=database
-            ), echo = parser.get('default', 'DEBUG'))
+            ), echo=config.DEBUG)
 
         # Test, whether the connection can be made
         try:

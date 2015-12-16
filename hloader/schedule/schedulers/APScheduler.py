@@ -1,5 +1,10 @@
+"""Controls the APS scheduler"""
 from __future__ import absolute_import
 from __future__ import print_function
+
+import threading
+import Queue
+import logging
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
@@ -11,14 +16,13 @@ from hloader.transfer.runners.SSHRunner import SSHRunner
 from hloader.db.DatabaseManager import DatabaseManager
 from hloader.db.connectors.sqlaentities.Transfer import Transfer
 
-import threading
-import Queue
-import logging
+
 
 logging.basicConfig()
 
 
 class APScheduler(ITransferScheduler):
+    """APSScheduler class"""
     scheduler = None
     mutex = threading.Lock()
 
@@ -85,6 +89,12 @@ class APScheduler(ITransferScheduler):
 
     def modify_job(self, job, trigger, **kwargs):
         # Mutex implementation to add atomicity to the below operations.
+        """
+
+        :param job:
+        :param trigger:
+        :param kwargs:
+        """
         APScheduler.mutex.acquire()
 
         scheduler_transfer_id = DatabaseManager.meta_connector.get_transfers(job_id=job.job_id)[0].scheduler_transfer_id
@@ -119,6 +129,10 @@ class APScheduler(ITransferScheduler):
         APScheduler.scheduler.resume_job(job_id=scheduler_transfer_id)
 
     def event_listener(self, event):
+        """
+
+        :param event:
+        """
         if event.code is events.EVENT_SCHEDULER_START:
             print("[Schedule Manager] The scheduling daemon was started")
 
@@ -181,6 +195,10 @@ class APScheduler(ITransferScheduler):
 # For serialising the Job and getting a textual reference to the function, we need to keep it outside any class
 
 def tick(job):
+    """
+
+    :param job:
+    """
     APScheduler.mutex.acquire()
 
     if not DatabaseManager.meta_connector.get_jobs(job_id=job.job_id):

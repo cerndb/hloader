@@ -16,7 +16,7 @@ __author__ = 'dstein'
 def api_v1_get_jobs():
     # TODO if the user is an administrator for the system, allow them to see every job
     # kwargs = {"owner_username": get_username(request.remote_user)}
-    kwargs = {"owner_username": get_username("CERN\kdziedzi")}
+    kwargs = {"owner_username": get_username(r"CERN\kdziedzi")}
 
     jobs = DatabaseManager.meta_connector.get_jobs(**kwargs)
 
@@ -83,7 +83,7 @@ def api_v1_post_job():
 
     # TODO
     # if not DatabaseManager.auth_connector.can_user_access_schema(get_username(request.remote_user), database, schema):
-    if not DatabaseManager.auth_connector.can_user_access_schema(get_username("CERN\kdziedzi"), server.server_name,
+    if not DatabaseManager.auth_connector.can_user_access_schema(get_username(r"CERN\kdziedzi"), server.server_name,
                                                                  source_schema_name_):
         abort(403)
 
@@ -122,7 +122,7 @@ def api_v1_post_job():
 
     # TODO
     # job.owner_username = get_username(request.remote_user)
-    job.owner_username = get_username("CERN\kdziedzi")
+    job.owner_username = get_username(r"CERN\kdziedzi")
 
     job.sqoop_direct = True
 
