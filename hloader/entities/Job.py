@@ -1,6 +1,5 @@
-from __future__ import absolute_import
 
-__author__ = 'dstein'
+
 
 
 class Job(object):
@@ -24,7 +23,13 @@ class Job(object):
     interval = None
 
     def get_source_server(self):
+        """
+
+        """
         raise Exception("Not implemented.")
 
     def get_destination_cluster(self):
+        """
+
+        """
         raise Exception("Not implemented.")

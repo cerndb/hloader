@@ -1,30 +1,33 @@
-from __future__ import absolute_import
+from flask import Response, json, redirect, request
+from sqlalchemy.orm import class_mapper
 
 from hloader.api.v1 import app
 from hloader.db.DatabaseManager import DatabaseManager
 
-from flask import Response, json, redirect, request
-
-from sqlalchemy.orm import class_mapper
-
 
 @app.route('/api')
 def api_index():
-    # This route must be redirected to a suitable version of the HLoader API
-    # In future the API may well be extended/changed, and backward
-    # compatibility will guarantee that things don't break.
+    """
+     This route must be redirected to a suitable version of the HLoader API
+     In future the API may well be extended/changed, and backward
+     compatibility will guarantee that things don't break.
 
-    # Redirect to HLoader API v1
+    :return: Redirect to HLoader API v1
+    """
     return redirect('/api/v1', code=302)
 
 
 @app.route('/api/v1')
 def api_index_default():
+    """
+    Returns to index page
+    :return: Returns to index page
+    """
     return "This is the landing page for the HLoader REST API v1"
 
 
 @app.route('/api/v1/HL_SERVERS')
-def api_HL_SERVERS():
+def api_hl_servers():
     if set(request.args) <= {'server_id', 'server_address', 'server_port', 'server_name', 'limit', 'offset'}:
         s_id = request.args.get('server_id')
         address = request.args.get('server_address')
@@ -51,7 +54,7 @@ def api_HL_SERVERS():
 
 
 @app.route('/api/v1/HL_CLUSTERS')
-def api_HL_CLUSTERS():
+def api_hl_clusters():
     if set(request.args) <= {'cluster_id', 'cluster_address', 'cluster_name', 'limit', 'offset'}:
         c_id = request.args.get('cluster_id')
         address = request.args.get('cluster_address')
@@ -75,7 +78,7 @@ def api_HL_CLUSTERS():
 
 
 @app.route('/api/v1/HL_TRANSFERS')
-def api_HL_TRANSFERS():
+def api_hl_transfers():
     if set(request.args) <= {'transfer_id', 'scheduler_transfer_id', 'job_id', 'transfer_status', 'limit', 'offset'}:
         t_id = request.args.get('transfer_id')
         st_id = request.args.get('scheduler_transfer_id')

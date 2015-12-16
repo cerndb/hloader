@@ -1,11 +1,8 @@
-from __future__ import absolute_import
-
-from os import environ
-import sys
 import argparse
+import sys
+from os import environ
 
 from hloader.db.DatabaseManager import DatabaseManager
-from hloader.entities.OracleServer import OracleServer
 from runserver import RunAPIServer
 
 ###############################################################################

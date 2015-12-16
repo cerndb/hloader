@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-from hloader.entities.oozie.Job import OozieJob
 
 class OozieRunner(OozieJob):
     def submit(self):
@@ -47,22 +45,33 @@ class OozieRunner(OozieJob):
             return response.json()['id']
 
     def manage(self, job, action):
+        """
+
+        :param job:
+        :param action:
+        :return:
+        """
         if action not in ('start', 'suspend', 'resume', 'kill', 'dryrun'):
             print "Unsupported action"
 
         URL = urlparse.urljoin(self.oozie_base_URL,
-                                   '/oozie/v2/jobs/{job}?action={action}'
-                                   .format(job=job.job_id, action=action)
-                                   )
+                               '/oozie/v2/jobs/{job}?action={action}'
+                               .format(job=job.job_id, action=action))
+
         response = requests.post(URL)
         return response.status_code
 
     def job_info(self, job, timezone = "CET"):
+        """
+
+        :param job:
+        :param timezone:
+        :return:
+        """
         URL = urlparse.urljoin(self.oozie_base_URL,
-                                   '/oozie/v2/job/{job}?show=info'
-                                   '&timezone={timezone}'
-                                   .format(job=job.job_id, timezone=timezone)
-                                   )
+                               '/oozie/v2/job/{job}?show=info'
+                               '&timezone={timezone}'
+                               .format(job=job.job_id, timezone=timezone))
 
         response = requests.post(URL)
         if response.status_code == 200:

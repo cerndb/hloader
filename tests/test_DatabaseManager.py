@@ -1,10 +1,3 @@
-from hloader.db import DatabaseManager
-from hloader.db.connectors import PostgreSQLAlchemyConnector
-
-from sqlalchemy.orm import Session, scoped_session
-
-from hloader.config import config
-
 class TestPostgreSQLAlchemyConnector:
     '''
     def test_setup_database(self):

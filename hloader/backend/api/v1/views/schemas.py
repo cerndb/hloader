@@ -1,21 +1,23 @@
 import json
-
-from flask import Response, request
-from flask.wrappers import Request
-from werkzeug.exceptions import abort
+from flask import Response
 
 from hloader.backend.api import app
 from hloader.backend.api.v1.util.get_username import get_username
 from hloader.db.DatabaseManager import DatabaseManager
 
-__author__ = 'dstein'
+
 
 
 @app.route('/api/v1/schemas')
 def api_v1_schemas():
     # TODO
     # auth = DatabaseManager.auth_connector.get_servers_for_user(get_username(request.remote_user))
-    auth = DatabaseManager.auth_connector.get_servers_for_user(get_username("CERN\kdziedzi"))
+
+    """
+    :return: Schemas in the DB
+    """
+
+    auth = DatabaseManager.auth_connector.get_servers_for_user(get_username(r"CERN\kdziedzi"))
     meta = DatabaseManager.meta_connector.get_servers()
 
     meta_aliases = map(lambda server: server.server_name, meta)
@@ -39,6 +41,12 @@ def api_v1_schemas_views(database, schema):
     # if not DatabaseManager.auth_connector.can_user_access_schema(get_username("CERN\kdziedzi"), database, schema):
     #     abort(403)
 
+    """
+
+    :param database:
+    :param schema:
+    :return: Views in the schema
+    """
     objects = DatabaseManager.auth_connector.get_available_objects(database, schema)
 
     result = {

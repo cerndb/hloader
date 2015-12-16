@@ -1,9 +1,7 @@
-
-__author__ = 'dstein'
 import cx_Oracle
-from ConfigParser import SafeConfigParser
-parser = SafeConfigParser()
-parser.read("config.ini")
+
+from hloader.config import config
+
 
 class OracleAuthConnector(object):
     def __init__(self, address, port, username, password, SID):
@@ -11,10 +9,10 @@ class OracleAuthConnector(object):
         self._username = username
         self._password = password
 
-        self.AUTH_TABLE = parser.get('default', 'AUTH_TABLE')
-        self.AUTH_USERNAME_ATTR = parser.get('default', 'AUTH_USERNAME_ATTR')
-        self.AUTH_DATABASE_ATTR = parser.get('default', 'AUTH_DATABASE_ATTR')
-        self.AUTH_SCHEMA_ATTR = parser.get('default', 'AUTH_SCHEMA_ATTR')
+        self.AUTH_TABLE = config.AUTH_TABLE
+        self.AUTH_USERNAME_ATTR = config.AUTH_USERNAME_ATTR
+        self.AUTH_DATABASE_ATTR = config.AUTH_DATABASE_ATTR
+        self.AUTH_SCHEMA_ATTR = config.AUTH_SCHEMA_ATTR
 
     def _connect(self):
         connection = cx_Oracle.connect(user=self._username, password=self._password, dsn=self._dsn)

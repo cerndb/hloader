@@ -1,15 +1,18 @@
 import json
-
 from flask import request, Response
 
 from hloader.backend.api import app
 from hloader.db.DatabaseManager import DatabaseManager
 
-__author__ = 'dstein'
+
 
 
 @app.route('/api/v1/servers')
 def api_v1_servers():
+    """
+
+    :return: Server list
+    """
     kwargs = {k: request.args[k] for k in
               ('server_id', 'server_address', 'server_port', 'server_name', 'limit', 'offset') if k in request.args}
     session = DatabaseManager.meta_connector.create_session()
@@ -21,10 +24,20 @@ def api_v1_servers():
 
 
 def filter_(servers):
+    """
+
+    :param servers:
+    :return: Filtered server list
+    """
     return servers
 
 
 def map_(servers):
+    """
+
+    :param servers:
+    :return:
+    """
     result = {"servers": []}
     for server in servers:
         s = {

@@ -1,22 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
-from __future__ import absolute_import
 import logging
 import os
 import threading
-
-from hloader.entities.Job import Job
-from hloader.db.DatabaseManager import DatabaseManager
 from itertools import imap
 
-__author__ = 'dstein'
+from hloader.config import config
+from hloader.entities.Job import Job
+
+
 
 logging.basicConfig()
 
-from ConfigParser import SafeConfigParser
-parser = SafeConfigParser()
-parser.read("config.ini")
 
 class ITransferRunner(threading.Thread):
     """
@@ -121,7 +116,7 @@ class ITransferRunner(threading.Thread):
 
         # --direct
         #         Use direct connector if exists for the database
-        if (self._job.sqoop_direct):
+        if self._job.sqoop_direct:
             command.append("--direct")
 
         # --fetch-size <n>
@@ -132,7 +127,7 @@ class ITransferRunner(threading.Thread):
 
         # -m,--num-mappers <n>
         #         Use n map tasks to import in parallel
-        if (self._job.sqoop_nmap):
+        if self._job.sqoop_nmap:
             command.append("--num-mappers")
             command.append(self._job.sqoop_nmap)
 
@@ -144,7 +139,8 @@ class ITransferRunner(threading.Thread):
         #         Column of the table used to split work units. Cannot be used with --autoreset-to-one-mapper option.
 
         # --autoreset-to-one-mapper
-        #         Import should use one mapper if a table has no primary key and no split-by column is provided. Cannot be used with --split-by <col> option.
+        #         Import should use one mapper if a table has no primary key and no split-by column is provided.
+        #         Cannot be used with --split-by <col> option.
 
         # --table <table-name>
         #         Table to read
@@ -157,7 +153,7 @@ class ITransferRunner(threading.Thread):
         # TODO put the right base path here, maybe check the target directory
         command.append(
             "{base}/{user}/{database}/{schema}/{object}/{relative}".format(
-                base=CLUSTER_BASE_PATH,
+                base=config.CLUSTER_BASE_PATH,
                 user=self._job.owner_username,
                 database=self._job.get_source_server().server_name,
                 schema=self._job.source_schema_name,
@@ -187,7 +183,7 @@ class ITransferRunner(threading.Thread):
         # exit after running the command
         command.append("; exit")
 
-        print command
+        print(command)
         command = imap(str, command)
 
         command_string = " ".join(command)

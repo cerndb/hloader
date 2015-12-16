@@ -1,14 +1,10 @@
-from __future__ import absolute_import
-from hloader.db.connectors.sqlaentities.Base import Base
-from hloader.entities.Transfer import Transfer
-
-__author__ = 'dstein'
-
+"""Transfer module"""
+from datetime import datetime
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
 
-from datetime import datetime
+from hloader.db.connectors.sqlaentities.Base import Base
+from hloader.entities.Transfer import Transfer
 
 
 class Transfer(Base, Transfer):

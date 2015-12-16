@@ -1,12 +1,16 @@
-__author__ = 'dstein'
 from functools import wraps
-
 from flask import redirect, request
 
 __SSO_NEEDED = True
 
 
 def sso_secured(function):
+    """
+
+    :param function:
+    :return:
+    """
+
     @wraps(function)
     def secured_function(*args, **kwargs):
         print('checking SSO')
