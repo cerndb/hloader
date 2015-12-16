@@ -1,1 +1,1 @@
-__author__ = 'dstein'
+from DatabaseManager import DatabaseManager

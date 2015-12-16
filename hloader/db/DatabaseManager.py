@@ -1,7 +1,6 @@
-from __future__ import absolute_import
 from hloader.db.connectors.OracleAuthConnector import OracleAuthConnector
 from hloader.db.connectors.PostgreSQLAlchemyConnector import PostgreSQLAlchemyConnector
-from hloader.db.IDatabaseConnector import IDatabaseConnector
+from hloader.db import IDatabaseConnector
 
 
 class DatabaseManager(object):
