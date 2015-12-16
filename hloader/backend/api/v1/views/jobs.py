@@ -1,15 +1,14 @@
 import json
 import re
-
 from flask import Response, request
 from werkzeug.exceptions import abort, BadRequest
 
 from hloader.backend.api import app
-from hloader.backend.api.v1.util.json_datetime_handler_default import json_datetime_handler_default
 from hloader.backend.api.v1.util.get_username import get_username
+from hloader.backend.api.v1.util.json_datetime_handler_default import json_datetime_handler_default
 from hloader.db.DatabaseManager import DatabaseManager
 
-__author__ = 'dstein'
+
 
 
 @app.route('/api/v1/jobs', methods=['GET'])

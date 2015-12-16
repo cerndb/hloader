@@ -1,15 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from hloader.entities.Job import Job
-from hloader.db.DatabaseManager import DatabaseManager
-from hloader.config import config
-from itertools import imap
-from __future__ import absolute_import
 import logging
 import os
 import threading
+from itertools import imap
 
-__author__ = 'dstein'
+from hloader.config import config
+from hloader.entities.Job import Job
+
+
 
 logging.basicConfig()
 
@@ -184,7 +183,7 @@ class ITransferRunner(threading.Thread):
         # exit after running the command
         command.append("; exit")
 
-        print command
+        print(command)
         command = imap(str, command)
 
         command_string = " ".join(command)

@@ -1,12 +1,10 @@
-from __future__ import absolute_import
+import re
 import threading
 import time
 import traceback
-import re
-
 import requests
 
-__author__ = 'dstein'
+
 
 HTML_UPDATE_WAIT_SECONDS = 1
 UPDATE_WAIT_SECONDS = 10

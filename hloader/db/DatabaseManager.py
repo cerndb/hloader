@@ -1,6 +1,6 @@
+from hloader.db import IDatabaseConnector
 from hloader.db.connectors.OracleAuthConnector import OracleAuthConnector
 from hloader.db.connectors.PostgreSQLAlchemyConnector import PostgreSQLAlchemyConnector
-from hloader.db import IDatabaseConnector
 
 
 class DatabaseManager(object):

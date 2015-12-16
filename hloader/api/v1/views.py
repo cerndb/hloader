@@ -1,9 +1,8 @@
-from hloader.api.v1 import app
-from hloader.db.DatabaseManager import DatabaseManager
-
-from __future__ import absolute_import
 from flask import Response, json, redirect, request
 from sqlalchemy.orm import class_mapper
+
+from hloader.api.v1 import app
+from hloader.db.DatabaseManager import DatabaseManager
 
 
 @app.route('/api')

@@ -1,11 +1,10 @@
 import json
-
 from flask import request, Response
 
 from hloader.backend.api import app
 from hloader.db.DatabaseManager import DatabaseManager
 
-__author__ = 'dstein'
+
 
 
 @app.route('/api/v1/servers')

@@ -1,22 +1,17 @@
 """Controls the APS scheduler"""
-from __future__ import absolute_import
-from __future__ import print_function
 
-import threading
 import Queue
 import logging
-
-from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
-from apscheduler.executors.pool import ThreadPoolExecutor, ProcessPoolExecutor
+import threading
 from apscheduler import events
+from apscheduler.executors.pool import ThreadPoolExecutor, ProcessPoolExecutor
+from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
+from apscheduler.schedulers.background import BackgroundScheduler
 
-from hloader.schedule.ITransferScheduler import ITransferScheduler
-from hloader.transfer.runners.SSHRunner import SSHRunner
 from hloader.db.DatabaseManager import DatabaseManager
 from hloader.db.connectors.sqlaentities.Transfer import Transfer
-
-
+from hloader.schedule.ITransferScheduler import ITransferScheduler
+from hloader.transfer.runners.SSHRunner import SSHRunner
 
 logging.basicConfig()
 

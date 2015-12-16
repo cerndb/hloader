@@ -1,8 +1,14 @@
+"""Configuration module"""
+try:
+    import configparser
+except ImportError:
+    import ConfigParser as configparser
+import os
+
 print("loaded configuration module")
 
-from ConfigParser import SafeConfigParser
-CONFIG_FILES = ['hloader/config/config.ini']
-CONFIG_PARSER = SafeConfigParser()
+CONFIG_FILES = [os.path.dirname(os.path.abspath(__file__))+'/config.ini']
+CONFIG_PARSER = configparser.ConfigParser()
 CONFIG_FILES_FOUND = CONFIG_PARSER.read(CONFIG_FILES)
 
 CONFIG_FILES_MISSING = set(CONFIG_FILES) - set(CONFIG_FILES_FOUND)
@@ -12,7 +18,7 @@ print("Missing files     :", sorted(CONFIG_FILES_MISSING))
 
 
 if len(CONFIG_FILES_FOUND) != 1:
-    raise ValueError, "Failed to open/find all files"
+    raise ValueError("Failed to open/find all files")
 
 AUTH_TABLE = CONFIG_PARSER.get('default', 'AUTH_TABLE')
 AUTH_USERNAME_ATTR = CONFIG_PARSER.get('default', 'AUTH_USERNAME_ATTR')

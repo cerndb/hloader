@@ -1,10 +1,8 @@
-from __future__ import absolute_import
-
-from hloader.schedule.schedulers.APScheduler import APScheduler
-from hloader.db.DatabaseManager import DatabaseManager
-
 import threading
 import time
+
+from hloader.db.DatabaseManager import DatabaseManager
+from hloader.schedule.schedulers.APScheduler import APScheduler
 
 
 class ScheduleManager(object):

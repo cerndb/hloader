@@ -1,6 +1,4 @@
-__author__ = 'dstein'
 from functools import wraps
-
 from flask import redirect, request
 
 __SSO_NEEDED = True

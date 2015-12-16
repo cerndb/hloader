@@ -1,13 +1,9 @@
-from __future__ import absolute_import
-from hloader.db.connectors.sqlaentities.Base import Base
-from hloader.entities.Job import Job
-
-__author__ = 'dstein'
-
 import datetime
-
 from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, DateTime, Interval
 from sqlalchemy.orm import relationship
+
+from hloader.db.connectors.sqlaentities.Base import Base
+from hloader.entities.Job import Job
 
 
 class Job(Base, Job):

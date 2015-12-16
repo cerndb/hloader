@@ -1,19 +1,16 @@
+import datetime
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, scoped_session
+
+from hloader.config import config
 from hloader.db.IDatabaseConnector import IDatabaseConnector
 from hloader.db.connectors.sqlaentities.HadoopCluster import HadoopCluster
 from hloader.db.connectors.sqlaentities.Job import Job
 from hloader.db.connectors.sqlaentities.Log import Log
 from hloader.db.connectors.sqlaentities.OracleServer import OracleServer
 from hloader.db.connectors.sqlaentities.Transfer import Transfer
-from hloader.config import config
 
-from __future__ import absolute_import
 
-import datetime
-
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, scoped_session
-
-__author__ = 'dstein'
 
 class PostgreSQLAlchemyConnector(IDatabaseConnector):
     """

@@ -1,7 +1,6 @@
-from hloader.config import config
-
-__author__ = 'dstein'
 import cx_Oracle
+
+from hloader.config import config
 
 
 class OracleAuthConnector(object):

@@ -1,11 +1,8 @@
-from __future__ import absolute_import
-from hloader.db.connectors.sqlaentities.Base import Base
-from hloader.entities.OracleServer import OracleServer
-
-__author__ = 'dstein'
-
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import relationship
+
+from hloader.db.connectors.sqlaentities.Base import Base
+from hloader.entities.OracleServer import OracleServer
 
 
 class OracleServer(Base, OracleServer):

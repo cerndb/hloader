@@ -1,10 +1,8 @@
-from hloader.db.connectors.sqlaentities.Base import Base
-from hloader.entities.Log import Log
-
-__author__ = 'dstein'
-
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
+
+from hloader.db.connectors.sqlaentities.Base import Base
+from hloader.entities.Log import Log
 
 
 class Log(Base, Log):

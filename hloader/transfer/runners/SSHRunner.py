@@ -1,28 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
-from __future__ import division
-from __future__ import absolute_import
+"""SSHRunner module"""
 import os
-import sys
-import socket
-import traceback
 import re
-
-import paramiko
+import socket
+import sys
 from paramiko.py3compat import u
-
 from paramiko.ssh_exception import PasswordRequiredException, BadHostKeyException, AuthenticationException, SSHException
 
 from hloader.db.DatabaseManager import DatabaseManager
+from hloader.entities.Log import Log
 from hloader.entities.Transfer import Transfer
 from hloader.transfer.ITransferRunner import ITransferRunner
 from hloader.transfer.monitors.RESTMonitor import RESTMonitor
-from hloader.entities.Log import Log
 
 RETURN = '\x0d'
 
-__author__ = 'dstein'
+
 
 
 class SSHRunner(ITransferRunner):

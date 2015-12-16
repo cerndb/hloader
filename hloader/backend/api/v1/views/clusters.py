@@ -1,12 +1,11 @@
 import json
-
 from flask import Response
 
 from hloader.backend.api import app
 from hloader.backend.api.v1.util.json_datetime_handler_default import json_datetime_handler_default
 from hloader.db.DatabaseManager import DatabaseManager
 
-__author__ = 'dstein'
+
 
 
 @app.route('/api/v1/clusters')

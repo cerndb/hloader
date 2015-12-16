@@ -1,14 +1,11 @@
 import json
-
-from flask import Response, request
-from flask.wrappers import Request
-from werkzeug.exceptions import abort
+from flask import Response
 
 from hloader.backend.api import app
 from hloader.backend.api.v1.util.get_username import get_username
 from hloader.db.DatabaseManager import DatabaseManager
 
-__author__ = 'dstein'
+
 
 
 @app.route('/api/v1/schemas')
