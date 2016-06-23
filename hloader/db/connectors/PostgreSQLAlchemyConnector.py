@@ -137,10 +137,9 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
                 .limit(limit)\
                 .offset(offset)\
                 .all()
-        #smth wrong here
+
         else:
             result = _inner_session.query(HadoopCluster).order_by(order).limit(limit).offset(offset).all()
-        #
 
         if not _session:
             _inner_session_registry.remove()

@@ -94,14 +94,13 @@ class OracleAuthConnector(object):
             connection = self._connect()
             cursor = connection.cursor()
             cursor.prepare(
-                #where is this package with the function?
-                #"select OBJECT_NAME, OBJECT_TYPE from table(cern_dba.get_user_objects(:database_name,:schema_name))"
-                "select OBJECT_NAME from USER_OBJECTS WHERE OBJECT_TYPE='TABLE' OR OBJECT_TYPE='VIEW'"
+                "select OBJECT_NAME, OBJECT_TYPE from table(cern_dba.get_user_objects(:database_name,:schema_name))"
+                #"select OBJECT_NAME from USER_OBJECTS WHERE OBJECT_TYPE='TABLE' OR OBJECT_TYPE='VIEW'"
             )
              
             cursor.execute(None, {
-                #'database_name': database.upper(),
-                #'schema_name': schema.upper()
+                'database_name': database.upper(),
+                'schema_name': schema.upper()
             })
 
             raw = cursor.fetchall()
