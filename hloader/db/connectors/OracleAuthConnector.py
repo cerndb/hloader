@@ -82,7 +82,6 @@ class OracleAuthConnector(object):
 
         except Exception as e:
             # TODO raise
-            print str(e)
             return False
         finally:
             cursor.close()
