@@ -9,7 +9,7 @@ import os
 #for db connectors
 print("loaded configuration module")
 
-CONFIG_FILES = eval(os.environ["HL_CONFIG_FILE"]) #string to list
+CONFIG_FILES = eval(os.getenv('HL_CONFIG_FILE',str([os.path.dirname(os.path.abspath(__file__))+'/config.ini'])))
 CONFIG_PARSER = configparser.ConfigParser()
 CONFIG_FILES_FOUND = CONFIG_PARSER.read(CONFIG_FILES)
 
