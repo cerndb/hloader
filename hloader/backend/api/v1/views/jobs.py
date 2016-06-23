@@ -8,14 +8,12 @@ from hloader.backend.api.v1.util.get_username import get_username
 from hloader.backend.api.v1.util.json_datetime_handler_default import json_datetime_handler_default
 from hloader.db.DatabaseManager import DatabaseManager
 
-
-
-
 @app.route('/api/v1/jobs', methods=['GET'])
 def api_v1_get_jobs():
-    # TODO if the user is an administrator for the system, allow them to see every job
-    # kwargs = {"owner_username": get_username(request.remote_user)}
-    kwargs = {"owner_username": get_username(r"CERN\kdziedzi")}
+    kwargs = {k: request.args[k] for k in
+          ('job_id', 'source_server_id', 'source_schema_name', 'source_object_name', 'destination_cluster_id', 
+          'destination_path', 'owner_username', 'sqoop_nmap', 'sqoop_splitting_column', 'sqoop_incremental_method',
+          'sqoop_direct', 'start_time', 'interval', 'job_last_update', 'limit', 'offset') if k in request.args}
 
     jobs = DatabaseManager.meta_connector.get_jobs(**kwargs)
 
@@ -33,6 +31,7 @@ def api_v1_get_jobs():
         "sqoop_direct",
         "start_time",
         "interval",
+        "job_last_update"
     ]
 
     result = {"jobs": []}
@@ -64,12 +63,15 @@ def api_v1_post_job():
         "source_object_name",
         "destination_cluster_id",
         "destination_path",
-        "start_time",
-        "interval",
+        "owner_username",
+        "sqoop_direct"
     ])
-    if len(set.intersection(required_fields, request.form.keys())) != len(required_fields):
+
+    request_form_keys=request.form.keys()
+
+    if len(set.intersection(required_fields, request_form_keys)) != len(required_fields):
         raise BadRequest("Required fields: " + ', '.join(required_fields) + ", missing fields: " + ', '.join(
-            required_fields.difference(request.form.keys())))
+            required_fields.difference(request_form_keys)))
 
     # Check, whether the user could access the schema.
     source_server_id_ = int(request.form["source_server_id"])
@@ -79,10 +81,11 @@ def api_v1_post_job():
     server = server[0]
 
     source_schema_name_ = request.form["source_schema_name"]
+    owner_username = request.form["owner_username"]
 
     # TODO
     # if not DatabaseManager.auth_connector.can_user_access_schema(get_username(request.remote_user), database, schema):
-    if not DatabaseManager.auth_connector.can_user_access_schema(get_username(r"CERN\kdziedzi"), server.server_name,
+    if not DatabaseManager.auth_connector.can_user_access_schema(get_username("CERN\\"+owner_username), server.server_name,
                                                                  source_schema_name_):
         abort(403)
 
@@ -121,11 +124,27 @@ def api_v1_post_job():
 
     # TODO
     # job.owner_username = get_username(request.remote_user)
-    job.owner_username = get_username(r"CERN\kdziedzi")
+    job.owner_username = get_username("CERN\\"+owner_username)
 
-    job.sqoop_direct = True
+    if 'sqoop_nmap' in request_form_keys:
+        job.sqoop_nmap = request.form["sqoop_nmap"]
 
-    # TODO set start time and interval
+    if 'sqoop_splitting_column' in request_form_keys:
+        job.sqoop_splitting_column = request.form["sqoop_splitting_column"]
+
+    if 'sqoop_incremental_method' in request_form_keys:
+        job.sqoop_incremental_method = request.form["sqoop_incremental_method"]
+    
+    job.sqoop_direct = request.form["sqoop_direct"]
+
+    if 'start_time' in request_form_keys:
+        job.start_time = request.form["start_time"]
+
+    if 'interval' in request_form_keys:
+        job.interval = request.form["interval"]
+
+    if 'job_last_update' in request_form_keys:
+        job.job_last_update = request.form["job_last_update"]
 
     job_id = DatabaseManager.meta_connector.add_job(job)
 

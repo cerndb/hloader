@@ -1,20 +1,19 @@
 import json
-from flask import Response
+from flask import Response, request
 
 from hloader.backend.api import app
-from hloader.backend.api.v1.util.json_datetime_handler_default import json_datetime_handler_default
 from hloader.db.DatabaseManager import DatabaseManager
-
-
-
 
 @app.route('/api/v1/clusters')
 def api_v1_clusters():
-    clusters = DatabaseManager.meta_connector.get_clusters()
+    kwargs = {k: request.args[k] for k in
+          ('cluster_id', 'cluster_address', 'cluster_name', 'limit', 'offset') if k in request.args}
+
+    clusters = DatabaseManager.meta_connector.get_clusters(**kwargs)
 
     filter_key_list = [
         "cluster_id",
-        # "cluster_address",
+        "cluster_address",
         "cluster_name",
     ]
 
@@ -28,4 +27,4 @@ def api_v1_clusters():
         )
     }
 
-    return Response(json.dumps(result, indent=4, default=json_datetime_handler_default), mimetype="application/json")
+    return Response(json.dumps(result, indent=4), mimetype="application/json")

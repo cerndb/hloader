@@ -15,8 +15,8 @@ def api_v1_servers():
     """
     kwargs = {k: request.args[k] for k in
               ('server_id', 'server_address', 'server_port', 'server_name', 'limit', 'offset') if k in request.args}
-    session = DatabaseManager.meta_connector.create_session()
-    servers = DatabaseManager.meta_connector.get_servers(_session=session, **kwargs)
+
+    servers = DatabaseManager.meta_connector.get_servers(**kwargs)
 
     result = map_(servers)
 

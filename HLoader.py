@@ -1,9 +1,4 @@
-import argparse
-import sys
-from os import environ
-
-from hloader.db.DatabaseManager import DatabaseManager
-from runserver import RunAPIServer
+import argparse, sys, os
 
 ###############################################################################
 #                           argparse configuration                            #
@@ -15,52 +10,41 @@ parser.add_argument('-c', '--check-sanity', action='store_true', help='Check the
 parser.add_argument('-r', '--run', help='Run the Flask microserver', action='store_true')
 parser.add_argument('--debug', help='Enable debugging mode', action='store_true', default=False)
 parser.add_argument('--use-reloader', action='store_true', help='Use reloader to run Flask microserver', default=False)
-parser.add_argument('--oracledb-url', action='store', help='Specify Oracle DB URL')
-parser.add_argument('--postgres-host', action='store', help='Specify PostgreSQL host', default='localhost')
-parser.add_argument('--postgres-dbname', action='store', help='Specify PostgreSQL database name', default='hloader')
-parser.add_argument('--postgres-port', action='store', help='Specify PostgreSQL port number', default='5432')
-parser.add_argument('--postgres-user', action='store', help='Specify PostgreSQL username', default='hloader')
-parser.add_argument('--postgres-password', action='store', help='Specify PostgreSQL password')
+parser.add_argument('--config-file', action='store', help='Specify the path to the configuration file', default=[os.path.dirname(os.path.abspath(__file__))+'/hloader/config/config.ini'])
 
 args = vars(parser.parse_args())
 
-
-if len(sys.argv) == 1:
-    # Load configuration
-    # Initialize database connection
-    # Initialize scheduler
-    # Start transfers
-
-    # Load configuration
-
-    # Initialize database connection
-    DBM = DatabaseManager()
-
-    postgre_address = environ.get('POSTGRE_ADDRESS')
-    postgre_port = environ.get('POSTGRE_PORT')
-    postgre_username = environ.get('POSTGRE_USERNAME')
-    postgre_password = environ.get('POSTGRE_PASSWORD')
-    postgre_database = environ.get('POSTGRE_DATABASE')
-
-    if not (postgre_address and postgre_port and postgre_username and postgre_password and postgre_database):
-        raise Exception("Environmental variables are not properly set up.")
-
-    DBM.connect_meta("PostgreSQLA", postgre_address, postgre_port, postgre_username, postgre_password, postgre_database)
-
-    # Initialize scheduler
-
-    # Start transfers
-
-    RunAPIServer(debug=True, use_reloader=False)
-
-else:
-    if args['check_sanity']:
+if args['check_sanity']:
         pass
 
-    if args['run']:
-        DBM = DatabaseManager()
+if args['run']:
+    os.environ["HL_CONFIG_FILE"] = str(args['config_file'])
 
-        DBM.connect_meta("PostgreSQLA", args['postgres_host'], args['postgres_port'], args['postgres_user'],
-                         args['postgres_password'], args['postgres_dbname'])
+    from hloader.config import config
+    from hloader.db.DatabaseManager import DatabaseManager
+    from hloader.backend.api import app  # initialize the application in hloader.backend.api
 
-        RunAPIServer(debug=args['debug'], use_reloader=args['use_reloader'])
+    if not (config.POSTGRE_ADDRESS and
+            config.POSTGRE_PORT and
+            config.POSTGRE_USERNAME and
+            config.POSTGRE_PASSWORD and
+            config.POSTGRE_DATABASE):
+        raise Exception("Config not properly set up.")
+
+    DatabaseManager.connect_meta("PostgreSQLA",
+                                 config.POSTGRE_ADDRESS,
+                                 config.POSTGRE_PORT,
+                                 config.POSTGRE_USERNAME,
+                                 config.POSTGRE_PASSWORD,
+                                 config.POSTGRE_DATABASE)
+
+    DatabaseManager.connect_auth(config.AUTH_ADDRESS,
+                                 config.AUTH_PORT,
+                                 config.AUTH_USERNAME,
+                                 config.AUTH_PASSWORD,
+                                 config.AUTH_SERVICE_NAME)
+
+    if __name__ == "__main__":
+        app.run(debug=args['debug'], use_reloader=args['use_reloader'])
+
+    views.__author__  # placeholder, so the views initializer script won't get deleted by accidental auto-formatting

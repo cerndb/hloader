@@ -32,7 +32,8 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
                 address=address,
                 port=port,
                 database=database
-            ), echo=config.DEBUG)
+            )#, echo=config.DEBUG 
+        )
 
         # Test, whether the connection can be made
         try:
@@ -110,7 +111,7 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
 
         :return: Set of available clusters.
         """
-
+        
         if not _session:
             _inner_session_registry = self.create_session()
             _inner_session = _inner_session_registry()
@@ -136,10 +137,10 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
                 .limit(limit)\
                 .offset(offset)\
                 .all()
-
+        #smth wrong here
         else:
             result = _inner_session.query(HadoopCluster).order_by(order).limit(limit).offset(offset).all()
-
+        #
 
         if not _session:
             _inner_session_registry.remove()
@@ -304,16 +305,7 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
 
         return result
 
-    def get_log(self, transfer, source, _session=None):
-        """
-
-        :param transfer:
-        :param source:
-
-        :type transfer: Transfer
-        :type source: str
-        :return:
-        """
+    def get_logs(self, _session=None, **kwargs):
 
         if not _session:
             _inner_session_registry = self.create_session()
@@ -321,21 +313,36 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
         else:
             _inner_session = _session
 
-        # TODO: Need to test if we can make do without the line below
-        # log = _session.query(Log).filter(Log.transfer == transfer, Log.log_source == source).first()
+        limit = kwargs.pop('limit', None)
+        offset = kwargs.pop('offset', 0)
 
-        log = None
-        if not log:
-            log = Log()
-            log.transfer = transfer
-            log.log_source = source
-        _inner_session.add(log)
+        order = kwargs.pop('order', None)
+
+        if order:
+            order = getattr(Log, order)
+
+        for key, value in kwargs.items():
+            if value is None:
+                kwargs.pop(key, None)
+
+        if len(kwargs):
+            result = _inner_session.query(Log)\
+                .filter_by(**kwargs)\
+                .order_by(order)\
+                .limit(limit)\
+                .offset(offset)\
+                .all()
+
+        else:
+            result = _inner_session.query(Log).order_by(order).limit(limit).offset(offset).all()
 
         if not _session:
-            _inner_session.commit()
             _inner_session_registry.remove()
 
-        return log
+        return result
+
+    def create_log(self):
+        return Log()
 
     def save_log(self, log, _session=None):
         # TODO
@@ -355,9 +362,16 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
             _inner_session = _session
 
         _inner_session.add(log)
+        _inner_session.flush()
+
+        _inner_session.refresh(log)
+        result = log.log_id
+
         if not _session:
             _inner_session.commit()
             _inner_session_registry.remove()
+
+        return result
 
     def create_job(self):
         return Job()
@@ -381,62 +395,43 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
 
         return result
 
+    def create_transfer(self):
+        return Transfer()
 
-    def create_transfer(self, job, transfer_instance_id, _session=None):
-        # TODO
-        """
-
-        :param job:
-
-        :type job Job
-
-        :return:
-        """
+    def add_transfer(self, transfer, _session=None):
         if not _session:
             _inner_session_registry = self.create_session()
             _inner_session = _inner_session_registry()
         else:
             _inner_session = _session
 
-        transfer = Transfer()
-        transfer.job = job
-        transfer.scheduler_transfer_id = transfer_instance_id
         _inner_session.add(transfer)
+        _inner_session.flush()
+
+        _inner_session.refresh(transfer)
+        result = transfer.transfer_id
 
         if not _session:
             _inner_session.commit()
             _inner_session_registry.remove()
 
-        return transfer
+        return result
 
-    def modify_status(self, transfer, status, _session=None):
-        # TODO
-        """
-        :param transfer:
-        :param status:
-
-        :type transfer: Transfer
-        :type status: str
-
-        :rtype: None
-        """
+    def modify_status(self, transfer_id, transfer_status, _session=None):
+        
         if not _session:
             _inner_session_registry = self.create_session()
             _inner_session = _inner_session_registry()
         else:
             _inner_session = _session
 
-        transfer.transfer_status = status
-
-        transfer = _inner_session.merge(transfer)
-        _inner_session.add(transfer)
-
-        # TODO proper status handling
-        # Create new history entry
+        result=_inner_session.query(Transfer).filter(Transfer.transfer_id == transfer_id).update({'transfer_status': transfer_status})
 
         if not _session:
             _inner_session.commit()
             _inner_session_registry.remove()
+
+        return result
 
     def setup_database(self):
         # TODO
