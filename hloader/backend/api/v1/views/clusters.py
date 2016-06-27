@@ -27,4 +27,4 @@ def api_v1_clusters():
         )
     }
 
-    return Response(json.dumps(result, indent=4), mimetype="application/json")
+    return Response(json.dumps(dict(result), indent=4), mimetype="application/json")
