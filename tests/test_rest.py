@@ -30,6 +30,6 @@ def test_api_v1_clusters():
         response = clusters.api_v1_clusters()
 
     assert response._status == '200 OK'
-    assert json.loads(response.response[0])['clusters'][0].get('cluster_address') == 'nosetest_host'
+    assert json.loads(response.response[0].decode())['clusters'][0].get('cluster_address') == 'nosetest_host'
 
 
