@@ -10,7 +10,7 @@ def api_v1_logs():
     kwargs = {k: request.args[k] for k in
           ('log_id','transfer_id', 'log_source', 'log_path', 'log_content', 'limit', 'offset') if k in request.args}
 
-    transfers = DatabaseManager.meta_connector.get_logs(**kwargs)
+    logs = DatabaseManager.meta_connector.get_logs(**kwargs)
 
     filter_key_list = [
         "log_id",
@@ -20,15 +20,14 @@ def api_v1_logs():
         "log_content"
     ]
 
-    result = {
-        "logs": map(
-            lambda transfer: {
-                key: getattr(transfer, key, None)
-                for key in filter_key_list
-                },
-            transfers
-        )
-    }
+    result = {"logs": []}
+
+    for log in logs:
+        l = {}
+        for key in filter_key_list:
+            l.update({key: getattr(log, key, None)})
+
+        result["logs"].append(l)
 
     return Response(json.dumps(result, indent=4), mimetype="application/json")
 

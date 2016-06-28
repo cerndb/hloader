@@ -31,7 +31,9 @@ def api_v1_get_jobs():
         "sqoop_direct",
         "start_time",
         "interval",
-        "job_last_update"
+        "job_last_update",
+        "source_server_alias",
+        "destination_cluster_alias"
     ]
 
     result = {"jobs": []}

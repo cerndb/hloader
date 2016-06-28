@@ -23,15 +23,14 @@ def api_v1_transfers():
         "last_modified_value"
     ]
 
-    result = {
-        "transfers": map(
-            lambda transfer: {
-                key: getattr(transfer, key, None)
-                for key in filter_key_list
-                },
-            transfers
-        )
-    }
+    result = {"transfers": []}
+
+    for transfer in transfers:
+        t = {}
+        for key in filter_key_list:
+            t.update({key: getattr(transfer, key, None)})
+
+        result["transfers"].append(t)
 
     return Response(json.dumps(result, indent=4, default=json_datetime_handler_default), mimetype="application/json")
 

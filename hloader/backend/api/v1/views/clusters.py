@@ -14,17 +14,17 @@ def api_v1_clusters():
     filter_key_list = [
         "cluster_id",
         "cluster_address",
-        "cluster_name",
+        "cluster_name"
     ]
 
-    result = {
-        "clusters": map(
-            lambda cluster: {
-                key: getattr(cluster, key, None)
-                for key in filter_key_list
-                },
-            clusters
-        )
-    }
 
-    return Response(json.dumps(dict(result), indent=4), mimetype="application/json")
+    result = {"clusters": []}
+
+    for cluster in clusters:
+        c = {}
+        for key in filter_key_list:
+            c.update({key: getattr(cluster, key, None)})
+
+        result["clusters"].append(c)
+
+    return Response(json.dumps(result, indent=4), mimetype="application/json")
