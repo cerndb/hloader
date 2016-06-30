@@ -23,8 +23,8 @@ def api_v1_schemas():
 
     meta_aliases = map(lambda server: server.server_name, meta)
 
-    available = filter(lambda key: key if key["database"] in meta_aliases else None, auth["databases"])
-    unavailable = filter(lambda key: key if key["database"] not in meta_aliases else None, auth["databases"])
+    available = list(filter(lambda key: key if key["database"] in meta_aliases else None, auth["databases"]))
+    unavailable = list(filter(lambda key: key if key["database"] not in meta_aliases else None, auth["databases"]))
 
     result = {
         "schemas": {
