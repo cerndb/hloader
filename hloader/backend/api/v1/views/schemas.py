@@ -21,7 +21,7 @@ def api_v1_schemas():
     auth = DatabaseManager.auth_connector.get_servers_for_user(get_username("CERN\\"+owner_username))
     meta = DatabaseManager.meta_connector.get_servers()
     print(auth)
-    meta_aliases = map(lambda server: server.server_name, meta)
+    meta_aliases = list(map(lambda server: server.server_name, meta))
     print(meta_aliases)
     available = list(filter(lambda key: key if key["database"] in meta_aliases else None, auth["databases"]))
     unavailable = list(filter(lambda key: key if key["database"] not in meta_aliases else None, auth["databases"]))
