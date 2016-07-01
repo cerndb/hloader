@@ -205,6 +205,7 @@ def test_api_v1_schemas():
 
     assert response._status == '200 OK'
     assert json.loads(response.response[0].decode()).get('schemas').get('available')[0].get('database') == 'nosetest_server1'
+    print(json.loads(response.response[0].decode()).get('schemas').get('unavailable')[0].get('database'))
     assert json.loads(response.response[0].decode()).get('schemas').get('unavailable')[0].get('database') == 'nosetest_server2'
 
 def test_api_v1_schemas_views():
