@@ -304,6 +304,37 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
 
         return result
 
+    def get_log(self, transfer, source, _session=None):
+        """
+        :param transfer:
+        :param source:
+        :type transfer: Transfer
+        :type source: str
+        :return:
+        """
+
+        if not _session:
+            _inner_session_registry = self.create_session()
+            _inner_session = _inner_session_registry()
+        else:
+            _inner_session = _session
+
+        # TODO: Need to test if we can make do without the line below
+        # log = _session.query(Log).filter(Log.transfer == transfer, Log.log_source == source).first()
+
+        log = None
+        if not log:
+            log = Log()
+            log.transfer = transfer
+            log.log_source = source
+        _inner_session.add(log)
+
+        if not _session:
+            _inner_session.commit()
+            _inner_session_registry.remove()
+
+        return log
+
     def get_logs(self, _session=None, **kwargs):
 
         if not _session:
@@ -394,43 +425,56 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
 
         return result
 
-    def create_transfer(self):
-        return Transfer()
-
-    def add_transfer(self, transfer, _session=None):
+    def create_transfer(self, job, transfer_instance_id, _session=None):
+        # TODO
+        """
+        :param job:
+        :type job Job
+        :return:
+        """
         if not _session:
             _inner_session_registry = self.create_session()
             _inner_session = _inner_session_registry()
         else:
             _inner_session = _session
 
+        transfer = Transfer()
+        transfer.job = job
+        transfer.scheduler_transfer_id = transfer_instance_id
         _inner_session.add(transfer)
-        _inner_session.flush()
-
-        _inner_session.refresh(transfer)
-        result = transfer.transfer_id
 
         if not _session:
             _inner_session.commit()
             _inner_session_registry.remove()
 
-        return result
+        return transfer
 
-    def modify_status(self, transfer_id, transfer_status, _session=None):
-        
+    def modify_status(self, transfer, status, _session=None):
+        # TODO
+        """
+        :param transfer:
+        :param status:
+        :type transfer: Transfer
+        :type status: str
+        :rtype: None
+        """
         if not _session:
             _inner_session_registry = self.create_session()
             _inner_session = _inner_session_registry()
         else:
             _inner_session = _session
 
-        result=_inner_session.query(Transfer).filter(Transfer.transfer_id == transfer_id).update({'transfer_status': transfer_status})
+        transfer.transfer_status = status
+
+        transfer = _inner_session.merge(transfer)
+        _inner_session.add(transfer)
+
+        # TODO proper status handling
+        # Create new history entry
 
         if not _session:
             _inner_session.commit()
             _inner_session_registry.remove()
-
-        return result
 
     def setup_database(self):
         # TODO

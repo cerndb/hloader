@@ -80,12 +80,6 @@ class MetaConnector_Mock():
     def get_transfers(self, _session=None, **kwargs):
         return [self.transfer]
 
-    def create_transfer(self):
-        return Transfer()
-
-    def add_transfer(self, transfer, _session=None):
-        return 1
-
     def modify_status(self, transfer_id, transfer_status, _session=None):
         return 0
 
@@ -158,29 +152,6 @@ def test_api_v1_transfers():
 
     assert response._status == '200 OK'
     assert json.loads(response.response[0].decode()).get('transfers')[0].get('scheduler_transfer_id') == 'nosetest_id'
-
-def test_api_v1_post_transfer():
-    DatabaseManager.meta_connector = MetaConnector_Mock()
-    DatabaseManager.auth_connector = AuthConnector_Mock()
-    
-    request_data = {'job_id': u'1', 'last_modified_value': u'nosetest_value'}
-
-    with app.test_request_context(method = 'POST', data = request_data):
-        response = transfers.api_v1_post_transfer()
-
-    assert response._status == '200 OK'
-    assert json.loads(response.response[0].decode()).get('transfer_id') == 1
-
-def test_api_v1_put_transfer():
-    DatabaseManager.meta_connector = MetaConnector_Mock()
-
-    request_data = {'transfer_id': u'1', 'transfer_status': u'nosetest_status'}
-
-    with app.test_request_context(method = 'PUT', data = request_data):
-        response = transfers.api_v1_put_transfer()
-
-    assert response._status == '200 OK'
-    assert json.loads(response.response[0].decode()).get('status_update') == 0
 
 def test_headers():
     with app.test_request_context():
