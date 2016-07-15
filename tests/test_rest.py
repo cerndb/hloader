@@ -121,7 +121,6 @@ def test_api_v1_post_job():
         response = jobs.api_v1_post_job()
 
     assert response._status == '200 OK'
-    print response.response
     assert json.loads(response.response[0].decode()).get('job_id') == 1
 
 def test_api_v1_logs():
