@@ -33,6 +33,7 @@ class MetaConnector_Mock():
         self.cluster.cluster_id = 1
         self.cluster.cluster_address = "nosetest_host"
         self.cluster.cluster_name = "cluster1"
+        self.cluster.oozie_url = "mock://test.com/"
 
         self.server.server_id = 1
         self.server.server_address = "nosetest_address"
@@ -63,7 +64,9 @@ class MetaConnector_Mock():
         return [self.server]
 
     def create_job(self):
-        return Job()
+        job = Job()
+        job.job_id=1
+        return job
 
     def add_job(self, job, _session=None):
         return 1
@@ -82,6 +85,12 @@ class MetaConnector_Mock():
 
     def modify_status(self, transfer_id, transfer_status, _session=None):
         return 0
+
+    def get_source_server_for_job(self, job, _session=None):
+        return self.server
+
+    def get_destination_cluster_for_job(self, job, _session=None):
+        return self.cluster
 
 def test_api_v1_clusters():
     DatabaseManager.meta_connector = MetaConnector_Mock()
@@ -106,12 +115,13 @@ def test_api_v1_post_job():
     DatabaseManager.auth_connector = AuthConnector_Mock()
     
     request_data = {'source_schema_name': u'schema1', 'owner_username': u'user', 'source_server_id': u'1', 'destination_path': u'path',
-                   'destination_cluster_id': u'1', 'sqoop_direct': u'1', 'source_object_name': u'NOSETEST_OBJECT'}
+                   'destination_cluster_id': u'1', 'sqoop_direct': u'1', 'source_object_name': u'NOSETEST_OBJECT', 'workflow_suffix': u'wf'}
 
     with app.test_request_context(method = 'POST', data = request_data):
         response = jobs.api_v1_post_job()
 
     assert response._status == '200 OK'
+    print response.response
     assert json.loads(response.response[0].decode()).get('job_id') == 1
 
 def test_api_v1_logs():

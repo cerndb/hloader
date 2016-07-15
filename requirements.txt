@@ -13,3 +13,4 @@ sqlalchemy
 psycopg2
 flask-cors
 flup==1.0.3.dev20151210
+requests-mock

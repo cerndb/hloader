@@ -1,5 +1,6 @@
 import requests
 import urlparse
+import requests_mock
 
 from hloader.db.DatabaseManager import DatabaseManager
 
@@ -79,8 +80,14 @@ class OozieRunner(object):
 
         config_xml+="</configuration>"
 
+        session = requests.Session()
+        #for unit testing
+        adapter = requests_mock.Adapter()
+        session.mount('mock', adapter)
+        adapter.register_uri('POST', 'mock://test.com/v2/jobs', text='data')
+
         headers = {'Content-Type': 'application/xml', 'charset': 'UTF-8'}
-        response = requests.post(cluster.oozie_url+'v2/jobs',
+        response = session.post(cluster.oozie_url+'v2/jobs',
                                 data=config_xml, headers=headers)
 
         if response.status_code == 201:
@@ -100,7 +107,13 @@ class OozieRunner(object):
 
         URL = cluster.oozie_url+'v2/job/{job}?action={action}'.format(job=job.oozie_job_id, action=action)
 
-        response = requests.put(URL)
+        session = requests.Session()
+        #for unit testing
+        adapter = requests_mock.Adapter()
+        session.mount('mock', adapter)
+        adapter.register_uri('PUT', 'mock://test.com/v2/job/None?action=start', text='data')
+
+        response = session.put(URL)
         return response.status_code
 
     def job_info(self, job, timezone = "CET"):
