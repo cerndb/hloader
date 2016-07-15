@@ -7,14 +7,15 @@ from hloader.db.DatabaseManager import DatabaseManager
 @app.route('/api/v1/clusters')
 def api_v1_clusters():
     kwargs = {k: request.args[k] for k in
-          ('cluster_id', 'cluster_address', 'cluster_name', 'limit', 'offset') if k in request.args}
+          ('cluster_id', 'cluster_address', 'cluster_name', 'oozie_url', 'limit', 'offset') if k in request.args}
 
     clusters = DatabaseManager.meta_connector.get_clusters(**kwargs)
 
     filter_key_list = [
         "cluster_id",
         "cluster_address",
-        "cluster_name"
+        "cluster_name",
+        "oozie_url"
     ]
 
 

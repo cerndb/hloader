@@ -304,6 +304,37 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
 
         return result
 
+    def get_source_server_for_job(self, job, _session=None):
+        
+        if not _session:
+            _inner_session_registry = self.create_session()
+            _inner_session = _inner_session_registry()
+        else:
+            _inner_session = _session
+
+        result = _inner_session.query(OracleServer).filter_by(server_id=job.source_server_id).first()
+
+        if not _session:
+            _inner_session_registry.remove()
+
+        return result
+
+    def get_destination_cluster_for_job(self, job, _session=None):
+        
+        if not _session:
+            _inner_session_registry = self.create_session()
+            _inner_session = _inner_session_registry()
+        else:
+            _inner_session = _session
+
+        result = _inner_session.query(HadoopCluster).filter_by(cluster_id=job.destination_cluster_id).first()
+
+        if not _session:
+            _inner_session_registry.remove()
+
+        return result
+        
+
     def get_log(self, transfer, source, _session=None):
         """
         :param transfer:
@@ -416,14 +447,35 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
         _inner_session.add(job)
         _inner_session.flush()
 
-        _inner_session.refresh(job)
-        result = job.job_id
+        _inner_session.refresh(job) 
+        _inner_session.expunge_all()       
 
         if not _session:
             _inner_session.commit()
             _inner_session_registry.remove()
 
-        return result
+    def delete_job(self, job, _session=None):
+        if not _session:
+            _inner_session_registry = self.create_session()
+            _inner_session = _inner_session_registry()
+        else:
+            _inner_session = _session
+
+        transfers = _inner_session.query(Transfer).filter_by(job_id=job.job_id).all()
+        #cascade delete
+        for transfer in transfers:
+            _inner_session.query(Log).filter_by(transfer_id=transfer.transfer_id).delete()
+            _inner_session.query(Transfer).filter_by(transfer_id=transfer.transfer_id).delete()
+
+        _inner_session.delete(job)
+        _inner_session.flush()
+
+        _inner_session.expunge_all()       
+
+        if not _session:
+            _inner_session.commit()
+            _inner_session_registry.remove()
+
 
     def create_transfer(self, job, transfer_instance_id, _session=None):
         # TODO

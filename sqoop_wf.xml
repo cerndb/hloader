@@ -1,0 +1,31 @@
+<workflow-app name="sqoop-wf" xmlns="uri:oozie:workflow:0.1">
+    
+    <start to = "sqoopjob"/>
+
+    <action name="sqoopjob">
+        <sqoop xmlns="uri:oozie:sqoop-action:0.2">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <configuration>
+                <property>
+                    <name>mapred.compress.map.output</name>
+                    <value>true</value>
+                </property>
+            </configuration>
+            <command>${sqoopCommand}</command>
+            <archive>hdfs://localhost:8020/user/oozie/share/lib/sqoop/ojdbc6_g.jar#ojdbc6_g.jar</archive>
+            <!-- the ojdbc driver was placed there manually -->
+        </sqoop>
+        <ok to="end"/>
+        <error to="kill_job"/>
+    </action>
+
+   <kill name = "kill_job">
+      <message>Job Failed</message>
+   </kill>
+	
+   <end name = "end" />
+
+
+</workflow-app>
+

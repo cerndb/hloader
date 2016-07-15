@@ -14,7 +14,7 @@ def api_v1_servers():
     :return: Server list
     """
     kwargs = {k: request.args[k] for k in
-              ('server_id', 'server_address', 'server_port', 'server_name', 'limit', 'offset') if k in request.args}
+              ('server_id', 'server_address', 'server_port', 'server_service', 'server_name', 'limit', 'offset') if k in request.args}
 
     servers = DatabaseManager.meta_connector.get_servers(**kwargs)
     
@@ -22,6 +22,7 @@ def api_v1_servers():
         "server_id",
         "server_address",
         "server_port",
+        "server_service",
         "server_name" 
     ]
 

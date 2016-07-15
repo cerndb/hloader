@@ -4,7 +4,8 @@ CREATE TABLE hl_clusters
   (
     cluster_id      SERIAL NOT NULL ,
     cluster_address TEXT NOT NULL ,
-    cluster_name    TEXT NOT NULL
+    cluster_name    TEXT NOT NULL ,
+    oozie_url       TEXT NOT NULL
   ) ;
 ALTER TABLE hl_clusters ADD CONSTRAINT hl_clusters_pk PRIMARY KEY ( cluster_id ) ;
 
@@ -18,12 +19,16 @@ CREATE TABLE hl_jobs
     destination_cluster_id   INTEGER NOT NULL ,
     destination_path         TEXT NOT NULL ,
     owner_username           TEXT NOT NULL ,
+    coordinator_suffix       TEXT ,
+    workflow_suffix          TEXT NOT NULL ,
+    oozie_job_id             TEXT NOT NULL ,
     sqoop_nmap               INTEGER ,
     sqoop_splitting_column   TEXT ,
     sqoop_incremental_method TEXT ,
     sqoop_direct             INTEGER NOT NULL ,
     start_time               TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP ,
-    interval                 INTERVAL ,
+    end_time                 TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP ,
+    interval                 TEXT ,
     job_last_update          TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
   ) ;
 COMMENT ON COLUMN hl_jobs.update_difference
@@ -48,6 +53,7 @@ CREATE TABLE hl_servers
     server_id      SERIAL NOT NULL ,
     server_address TEXT NOT NULL ,
     server_port    INTEGER NOT NULL ,
+    server_service TEXT NOT NULL ,
     server_name    TEXT NOT NULL
   ) ;
 ALTER TABLE hl_servers ADD CONSTRAINT hl_oracle_servers_pk PRIMARY KEY ( server_id ) ;

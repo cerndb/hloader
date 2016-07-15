@@ -1,0 +1,14 @@
+<coordinator-app name="sqoop-coordinator"
+  frequency="${freq}"
+  start="${start_date}" end="${end_date}" timezone="CET"
+  xmlns="uri:oozie:coordinator:0.2"
+  >
+  <controls>
+    <execution>FIFO</execution>
+  </controls>
+  <action>
+    <workflow>
+      <app-path>${wf_application_path}</app-path>
+   </workflow>
+  </action>
+</coordinator-app>

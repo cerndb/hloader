@@ -7,13 +7,14 @@ from hloader.backend.api import app
 from hloader.backend.api.v1.util.get_username import get_username
 from hloader.backend.api.v1.util.json_datetime_handler_default import json_datetime_handler_default
 from hloader.db.DatabaseManager import DatabaseManager
+from hloader.transfer.runners.OozieRunner import OozieRunner
 
 @app.route('/api/v1/jobs', methods=['GET'])
 def api_v1_get_jobs():
     kwargs = {k: request.args[k] for k in
           ('job_id', 'source_server_id', 'source_schema_name', 'source_object_name', 'destination_cluster_id', 
-          'destination_path', 'owner_username', 'sqoop_nmap', 'sqoop_splitting_column', 'sqoop_incremental_method',
-          'sqoop_direct', 'start_time', 'interval', 'job_last_update', 'limit', 'offset') if k in request.args}
+          'destination_path', 'owner_username', 'coordinator_suffix', 'workflow_suffix', 'oozie_job_id', 'sqoop_nmap', 'sqoop_splitting_column', 'sqoop_incremental_method',
+          'sqoop_direct', 'start_time', 'end_time', 'interval', 'job_last_update', 'limit', 'offset') if k in request.args}
 
     jobs = DatabaseManager.meta_connector.get_jobs(**kwargs)
 
@@ -25,11 +26,15 @@ def api_v1_get_jobs():
         "destination_cluster_id",
         "destination_path",
         "owner_username",
+        "coordinator_suffix",
+        "workflow_suffix",
+        "oozie_job_id",
         "sqoop_nmap",
         "sqoop_splitting_column",
         "sqoop_incremental_method",
         "sqoop_direct",
         "start_time",
+        "end_time",
         "interval",
         "job_last_update",
         "source_server_alias",
@@ -66,6 +71,7 @@ def api_v1_post_job():
         "destination_cluster_id",
         "destination_path",
         "owner_username",
+        "workflow_suffix",
         "sqoop_direct"
     ])
 
@@ -128,6 +134,11 @@ def api_v1_post_job():
     # job.owner_username = get_username(request.remote_user)
     job.owner_username = get_username("CERN\\"+owner_username)
 
+    job.workflow_suffix = request.form["workflow_suffix"]
+
+    if 'coordinator_suffix' in request_form_keys:
+        job.coordinator_suffix = request.form["coordinator_suffix"]
+
     if 'sqoop_nmap' in request_form_keys:
         job.sqoop_nmap = request.form["sqoop_nmap"]
 
@@ -142,14 +153,61 @@ def api_v1_post_job():
     if 'start_time' in request_form_keys:
         job.start_time = request.form["start_time"]
 
+    if 'end_time' in request_form_keys:
+        job.end_time = request.form["end_time"]
+
     if 'interval' in request_form_keys:
         job.interval = request.form["interval"]
 
     if 'job_last_update' in request_form_keys:
         job.job_last_update = request.form["job_last_update"]
 
-    job_id = DatabaseManager.meta_connector.add_job(job)
+    runner = OozieRunner()
+    job.oozie_job_id=runner.submit(job)
 
-    result = {"job_id": job_id}
+    DatabaseManager.meta_connector.add_job(job)
+
+    result = None
+
+    if job.coordinator_suffix is None:
+        status_code = runner.manage(job,'start')
+        result = {"job_id": job.job_id, "oozie_job_id": job.oozie_job_id, "start status_code": status_code}
+
+    else:
+        result = {"job_id": job.job_id, "oozie_job_id": job.oozie_job_id}
 
     return Response(json.dumps(result, indent=4, default=json_datetime_handler_default), mimetype="application/json")
+
+@app.route('/api/v1/jobs', methods=['DELETE'])
+def api_v1_delete_job():
+    # Check, whether we got all the required data from the user.
+    required_fields = set([
+        "job_id"
+    ])
+
+    request_form_keys=request.form.keys()
+
+    if len(set.intersection(required_fields, request_form_keys)) != len(required_fields):
+        raise BadRequest("Required fields: " + ', '.join(required_fields) + ", missing fields: " + ', '.join(
+            required_fields.difference(request_form_keys)))
+
+    #get oozie_job_id for the job
+    jobs = DatabaseManager.meta_connector.get_jobs(**{"job_id": request.form["job_id"]})
+    
+    result = None    
+
+    if len(jobs)>0:
+        job=jobs[0]
+
+        runner = OozieRunner()
+        status_code = runner.manage(job,'kill')
+
+        DatabaseManager.meta_connector.delete_job(job)
+    
+        result = {"job_id": job.job_id, "oozie_job_id": job.oozie_job_id, "kill status_code": status_code}
+
+    else:
+        result = {"message": "job does not exist"}
+
+    return Response(json.dumps(result, indent=4, default=json_datetime_handler_default), mimetype="application/json")
+    
