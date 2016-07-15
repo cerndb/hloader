@@ -101,7 +101,7 @@ class OozieRunner(object):
         :return:
         """
         if action not in ('start', 'suspend', 'resume', 'kill', 'dryrun'):
-            print "Unsupported action"
+            print("Unsupported action")
         
         cluster=DatabaseManager.meta_connector.get_destination_cluster_for_job(job)
 
