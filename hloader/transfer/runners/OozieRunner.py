@@ -1,5 +1,4 @@
 import requests
-import urlparse
 import requests_mock
 
 from hloader.db.DatabaseManager import DatabaseManager
@@ -123,10 +122,9 @@ class OozieRunner(object):
         :param timezone:
         :return:
         """
-        URL = urlparse.urljoin(self.oozie_base_URL,
-                               '/oozie/v2/job/{job}?show=info'
-                               '&timezone={timezone}'
-                               .format(job=job.job_id, timezone=timezone))
+        cluster=DatabaseManager.meta_connector.get_destination_cluster_for_job(job)
+
+        URL = cluster.oozie_url+'v2/job/{job}?show=info&timezone={timezone}'.format(job=job.oozie_job_id, timezone=timezone)
 
         response = requests.post(URL)
         if response.status_code == 200:
