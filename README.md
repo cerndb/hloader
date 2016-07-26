@@ -3,9 +3,10 @@
 CERN HLoader
 
 To launch HLoader:
-1) Install the requirements
-2) Set up the config.ini
-3) Run HLoader.py
+
+1. Install the requirements
+2. Set up the config.ini
+3. Run HLoader.py
 
 REST API runs at http://127.0.0.1:5000/api/v1
 
