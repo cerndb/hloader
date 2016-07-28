@@ -9,6 +9,8 @@ HLoader is a tool built around Apache Sqoop and Oozie for data ingestion from re
 2. Set up the config.ini (properties starting with *AUTH_* represent the authentication database, while properties starting with *POSTGRE_* represent the meta database)
 3. Run HLoader.py
 
+In case you would like to set up the meta database yourself, the script is located in /hloader/db/PostgreSQL_backend_schema.sql
+
 # REST API
 
 The REST API exposes meta data to the user and enables the submission of new ingestion jobs <br>
