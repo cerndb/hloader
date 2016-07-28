@@ -1,14 +1,20 @@
 [![Build Status](https://travis-ci.org/cerndb/hloader.svg?branch=master)](https://travis-ci.org/cerndb/hloader)
 
-CERN HLoader
+# CERN HLoader
+HLoader is a tool built around Apache Sqoop and Oozie for data ingestion from relational databases into Hadoop
 
-To launch HLoader:
+# Installation & Configuration
 
 1. Install the requirements (*pip install -r requirements.txt*)
 2. Set up the config.ini (properties starting with *AUTH_* represent the authentication database, while properties starting with *POSTGRE_* represent the meta database)
 3. Run HLoader.py
 
-REST API runs on http://127.0.0.1:5000
+# REST API
+
+The REST API exposes meta data to the user and enables the submission of new ingestion jobs <br>
+It runs on http://127.0.0.1:5000 <br>
+
+### The available methods are:
 
 GET /headers<br>
 returns PYTHON ENVIRONMENT VARIABLES and REQUEST HEADERS
@@ -41,3 +47,7 @@ returns a json with an array of logs, potentially filtered by an attribute value
 
 GET /api/v1/transfers<br>
 returns a json with an array of transfers, potentially filtered by an attribute value
+
+### A word on Apache Oozie
+
+Currently the submitted jobs will be executed using Oozie Workflows or Coordinators. The path to the Workflow/Coordinator app on HDFS should be provided in the *workflow_suffix / coordinator_suffix* parameters respectively. The URL to the Oozie deployment is contained in the *clusters* meta data.
