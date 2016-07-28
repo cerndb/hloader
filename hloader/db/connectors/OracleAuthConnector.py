@@ -4,8 +4,9 @@ from hloader.config import config
 
 
 class OracleAuthConnector(object):
-    def __init__(self, address, port, username, password, SID):
-        self._dsn = cx_Oracle.makedsn(address, port, SID)
+    def __init__(self, address, port, username, password, SERVICE_NAME):
+ 
+        self._dsn = cx_Oracle.makedsn(address, port, service_name=SERVICE_NAME)
         self._username = username
         self._password = password
 
@@ -81,11 +82,11 @@ class OracleAuthConnector(object):
 
         except Exception as e:
             # TODO raise
-            # return str(e)
             return False
         finally:
             cursor.close()
             connection.close()
+
 
     def get_available_objects(self, database, schema):
         try:
@@ -93,7 +94,9 @@ class OracleAuthConnector(object):
             cursor = connection.cursor()
             cursor.prepare(
                 "select OBJECT_NAME, OBJECT_TYPE from table(cern_dba.get_user_objects(:database_name,:schema_name))"
+                #"select OBJECT_NAME from USER_OBJECTS WHERE OBJECT_TYPE='TABLE' OR OBJECT_TYPE='VIEW'"
             )
+             
             cursor.execute(None, {
                 'database_name': database.upper(),
                 'schema_name': schema.upper()

@@ -32,7 +32,8 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
                 address=address,
                 port=port,
                 database=database
-            ), echo=config.DEBUG)
+            )#, echo=config.DEBUG 
+        )
 
         # Test, whether the connection can be made
         try:
@@ -110,7 +111,7 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
 
         :return: Set of available clusters.
         """
-
+        
         if not _session:
             _inner_session_registry = self.create_session()
             _inner_session = _inner_session_registry()
@@ -139,7 +140,6 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
 
         else:
             result = _inner_session.query(HadoopCluster).order_by(order).limit(limit).offset(offset).all()
-
 
         if not _session:
             _inner_session_registry.remove()
@@ -304,12 +304,41 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
 
         return result
 
+    def get_source_server_for_job(self, job, _session=None):
+        
+        if not _session:
+            _inner_session_registry = self.create_session()
+            _inner_session = _inner_session_registry()
+        else:
+            _inner_session = _session
+
+        result = _inner_session.query(OracleServer).filter_by(server_id=job.source_server_id).first()
+
+        if not _session:
+            _inner_session_registry.remove()
+
+        return result
+
+    def get_destination_cluster_for_job(self, job, _session=None):
+        
+        if not _session:
+            _inner_session_registry = self.create_session()
+            _inner_session = _inner_session_registry()
+        else:
+            _inner_session = _session
+
+        result = _inner_session.query(HadoopCluster).filter_by(cluster_id=job.destination_cluster_id).first()
+
+        if not _session:
+            _inner_session_registry.remove()
+
+        return result
+        
+
     def get_log(self, transfer, source, _session=None):
         """
-
         :param transfer:
         :param source:
-
         :type transfer: Transfer
         :type source: str
         :return:
@@ -337,6 +366,45 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
 
         return log
 
+    def get_logs(self, _session=None, **kwargs):
+
+        if not _session:
+            _inner_session_registry = self.create_session()
+            _inner_session = _inner_session_registry()
+        else:
+            _inner_session = _session
+
+        limit = kwargs.pop('limit', None)
+        offset = kwargs.pop('offset', 0)
+
+        order = kwargs.pop('order', None)
+
+        if order:
+            order = getattr(Log, order)
+
+        for key, value in kwargs.items():
+            if value is None:
+                kwargs.pop(key, None)
+
+        if len(kwargs):
+            result = _inner_session.query(Log)\
+                .filter_by(**kwargs)\
+                .order_by(order)\
+                .limit(limit)\
+                .offset(offset)\
+                .all()
+
+        else:
+            result = _inner_session.query(Log).order_by(order).limit(limit).offset(offset).all()
+
+        if not _session:
+            _inner_session_registry.remove()
+
+        return result
+
+    def create_log(self):
+        return Log()
+
     def save_log(self, log, _session=None):
         # TODO
         """
@@ -355,9 +423,16 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
             _inner_session = _session
 
         _inner_session.add(log)
+        _inner_session.flush()
+
+        _inner_session.refresh(log)
+        result = log.log_id
+
         if not _session:
             _inner_session.commit()
             _inner_session_registry.remove()
+
+        return result
 
     def create_job(self):
         return Job()
@@ -372,24 +447,41 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
         _inner_session.add(job)
         _inner_session.flush()
 
-        _inner_session.refresh(job)
-        result = job.job_id
+        _inner_session.refresh(job) 
+        _inner_session.expunge_all()       
 
         if not _session:
             _inner_session.commit()
             _inner_session_registry.remove()
 
-        return result
+    def delete_job(self, job, _session=None):
+        if not _session:
+            _inner_session_registry = self.create_session()
+            _inner_session = _inner_session_registry()
+        else:
+            _inner_session = _session
+
+        transfers = _inner_session.query(Transfer).filter_by(job_id=job.job_id).all()
+        #cascade delete
+        for transfer in transfers:
+            _inner_session.query(Log).filter_by(transfer_id=transfer.transfer_id).delete()
+            _inner_session.query(Transfer).filter_by(transfer_id=transfer.transfer_id).delete()
+
+        _inner_session.delete(job)
+        _inner_session.flush()
+
+        _inner_session.expunge_all()       
+
+        if not _session:
+            _inner_session.commit()
+            _inner_session_registry.remove()
 
 
     def create_transfer(self, job, transfer_instance_id, _session=None):
         # TODO
         """
-
         :param job:
-
         :type job Job
-
         :return:
         """
         if not _session:
@@ -414,10 +506,8 @@ class PostgreSQLAlchemyConnector(IDatabaseConnector):
         """
         :param transfer:
         :param status:
-
         :type transfer: Transfer
         :type status: str
-
         :rtype: None
         """
         if not _session:

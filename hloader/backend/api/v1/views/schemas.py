@@ -1,12 +1,9 @@
 import json
-from flask import Response
+from flask import Response, request
 
 from hloader.backend.api import app
 from hloader.backend.api.v1.util.get_username import get_username
 from hloader.db.DatabaseManager import DatabaseManager
-
-
-
 
 @app.route('/api/v1/schemas')
 def api_v1_schemas():
@@ -17,13 +14,17 @@ def api_v1_schemas():
     :return: Schemas in the DB
     """
 
-    auth = DatabaseManager.auth_connector.get_servers_for_user(get_username(r"CERN\kdziedzi"))
+    owner_username=request.args["owner_username"]
+    if owner_username is None:
+        raise BadRequest("Indicate the owner_username parameter")
+
+    auth = DatabaseManager.auth_connector.get_servers_for_user(get_username("CERN\\"+owner_username))
     meta = DatabaseManager.meta_connector.get_servers()
 
-    meta_aliases = map(lambda server: server.server_name, meta)
+    meta_aliases = list(map(lambda server: server.server_name, meta))
 
-    available = filter(lambda key: key if key["database"] in meta_aliases else None, auth["databases"])
-    unavailable = filter(lambda key: key if key["database"] not in meta_aliases else None, auth["databases"])
+    available = list(filter(lambda key: key if key["database"] in meta_aliases else None, auth["databases"]))
+    unavailable = list(filter(lambda key: key if key["database"] not in meta_aliases else None, auth["databases"]))
 
     result = {
         "schemas": {

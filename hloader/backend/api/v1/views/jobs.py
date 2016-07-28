@@ -7,15 +7,14 @@ from hloader.backend.api import app
 from hloader.backend.api.v1.util.get_username import get_username
 from hloader.backend.api.v1.util.json_datetime_handler_default import json_datetime_handler_default
 from hloader.db.DatabaseManager import DatabaseManager
-
-
-
+from hloader.transfer.runners.OozieRunner import OozieRunner
 
 @app.route('/api/v1/jobs', methods=['GET'])
 def api_v1_get_jobs():
-    # TODO if the user is an administrator for the system, allow them to see every job
-    # kwargs = {"owner_username": get_username(request.remote_user)}
-    kwargs = {"owner_username": get_username(r"CERN\kdziedzi")}
+    kwargs = {k: request.args[k] for k in
+          ('job_id', 'source_server_id', 'source_schema_name', 'source_object_name', 'destination_cluster_id', 
+          'destination_path', 'owner_username', 'coordinator_suffix', 'workflow_suffix', 'oozie_job_id', 'sqoop_nmap', 'sqoop_splitting_column', 'sqoop_incremental_method',
+          'sqoop_direct', 'start_time', 'end_time', 'interval', 'job_last_update', 'limit', 'offset') if k in request.args}
 
     jobs = DatabaseManager.meta_connector.get_jobs(**kwargs)
 
@@ -27,12 +26,19 @@ def api_v1_get_jobs():
         "destination_cluster_id",
         "destination_path",
         "owner_username",
+        "coordinator_suffix",
+        "workflow_suffix",
+        "oozie_job_id",
         "sqoop_nmap",
         "sqoop_splitting_column",
         "sqoop_incremental_method",
         "sqoop_direct",
         "start_time",
+        "end_time",
         "interval",
+        "job_last_update",
+        "source_server_alias",
+        "destination_cluster_alias"
     ]
 
     result = {"jobs": []}
@@ -64,12 +70,16 @@ def api_v1_post_job():
         "source_object_name",
         "destination_cluster_id",
         "destination_path",
-        "start_time",
-        "interval",
+        "owner_username",
+        "workflow_suffix",
+        "sqoop_direct"
     ])
-    if len(set.intersection(required_fields, request.form.keys())) != len(required_fields):
+
+    request_form_keys=request.form.keys()
+
+    if len(set.intersection(required_fields, request_form_keys)) != len(required_fields):
         raise BadRequest("Required fields: " + ', '.join(required_fields) + ", missing fields: " + ', '.join(
-            required_fields.difference(request.form.keys())))
+            required_fields.difference(request_form_keys)))
 
     # Check, whether the user could access the schema.
     source_server_id_ = int(request.form["source_server_id"])
@@ -79,10 +89,11 @@ def api_v1_post_job():
     server = server[0]
 
     source_schema_name_ = request.form["source_schema_name"]
+    owner_username = request.form["owner_username"]
 
     # TODO
     # if not DatabaseManager.auth_connector.can_user_access_schema(get_username(request.remote_user), database, schema):
-    if not DatabaseManager.auth_connector.can_user_access_schema(get_username(r"CERN\kdziedzi"), server.server_name,
+    if not DatabaseManager.auth_connector.can_user_access_schema(get_username("CERN\\"+owner_username), server.server_name,
                                                                  source_schema_name_):
         abort(403)
 
@@ -121,14 +132,82 @@ def api_v1_post_job():
 
     # TODO
     # job.owner_username = get_username(request.remote_user)
-    job.owner_username = get_username(r"CERN\kdziedzi")
+    job.owner_username = get_username("CERN\\"+owner_username)
 
-    job.sqoop_direct = True
+    job.workflow_suffix = request.form["workflow_suffix"]
 
-    # TODO set start time and interval
+    if 'coordinator_suffix' in request_form_keys:
+        job.coordinator_suffix = request.form["coordinator_suffix"]
 
-    job_id = DatabaseManager.meta_connector.add_job(job)
+    if 'sqoop_nmap' in request_form_keys:
+        job.sqoop_nmap = request.form["sqoop_nmap"]
 
-    result = {"job_id": job_id}
+    if 'sqoop_splitting_column' in request_form_keys:
+        job.sqoop_splitting_column = request.form["sqoop_splitting_column"]
+
+    if 'sqoop_incremental_method' in request_form_keys:
+        job.sqoop_incremental_method = request.form["sqoop_incremental_method"]
+    
+    job.sqoop_direct = request.form["sqoop_direct"]
+
+    if 'start_time' in request_form_keys:
+        job.start_time = request.form["start_time"]
+
+    if 'end_time' in request_form_keys:
+        job.end_time = request.form["end_time"]
+
+    if 'interval' in request_form_keys:
+        job.interval = request.form["interval"]
+
+    if 'job_last_update' in request_form_keys:
+        job.job_last_update = request.form["job_last_update"]
+
+    runner = OozieRunner()
+    job.oozie_job_id=runner.submit(job)
+
+    DatabaseManager.meta_connector.add_job(job)
+
+    result = None
+
+    if job.coordinator_suffix is None:
+        status_code = runner.manage(job,'start')
+        result = {"job_id": job.job_id, "oozie_job_id": job.oozie_job_id, "start status_code": status_code}
+
+    else:
+        result = {"job_id": job.job_id, "oozie_job_id": job.oozie_job_id}
 
     return Response(json.dumps(result, indent=4, default=json_datetime_handler_default), mimetype="application/json")
+
+@app.route('/api/v1/jobs', methods=['DELETE'])
+def api_v1_delete_job():
+    # Check, whether we got all the required data from the user.
+    required_fields = set([
+        "job_id"
+    ])
+
+    request_form_keys=request.form.keys()
+
+    if len(set.intersection(required_fields, request_form_keys)) != len(required_fields):
+        raise BadRequest("Required fields: " + ', '.join(required_fields) + ", missing fields: " + ', '.join(
+            required_fields.difference(request_form_keys)))
+
+    #get oozie_job_id for the job
+    jobs = DatabaseManager.meta_connector.get_jobs(**{"job_id": request.form["job_id"]})
+    
+    result = None    
+
+    if len(jobs)>0:
+        job=jobs[0]
+
+        runner = OozieRunner()
+        status_code = runner.manage(job,'kill')
+
+        DatabaseManager.meta_connector.delete_job(job)
+    
+        result = {"job_id": job.job_id, "oozie_job_id": job.oozie_job_id, "kill status_code": status_code}
+
+    else:
+        result = {"message": "job does not exist"}
+
+    return Response(json.dumps(result, indent=4, default=json_datetime_handler_default), mimetype="application/json")
+    
