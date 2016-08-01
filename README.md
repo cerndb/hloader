@@ -5,9 +5,10 @@ HLoader is a tool built around Apache Sqoop and Oozie for data ingestion from re
 
 # Installation & Configuration
 
-1. Install the requirements (*pip install -r requirements.txt*)
-2. Set up the config.ini (properties starting with *AUTH_* represent the authentication database, while properties starting with *POSTGRE_* represent the meta database)
-3. Run HLoader.py
+1. Clone the repository (git clone https://github.com/cerndb/hloader.git) 
+2. Install the requirements (*pip install -r requirements.txt*)
+3. Set up the config.ini (properties starting with *AUTH_* represent the authentication database, while properties starting with *POSTGRE_* represent the meta database)
+4. Run HLoader.py
 
 In case you would like to set up the meta database yourself, the script is located in /hloader/db/PostgreSQL_backend_schema.sql
 
@@ -53,3 +54,5 @@ returns a json with an array of transfers, potentially filtered by an attribute 
 ### A word on Apache Oozie
 
 Currently the submitted jobs will be executed using Oozie Workflows or Coordinators. The path to the Workflow/Coordinator app on HDFS should be provided in the *workflow_suffix / coordinator_suffix* parameters respectively. The URL to the Oozie deployment is contained in the *clusters* meta data.
+
+Sample insert statements for meta data can be found in /hloader/db/PostgreSQL_test_data.sql
