@@ -6,7 +6,7 @@ HLoader is a tool built around Apache Sqoop and Oozie for data ingestion from re
 # Installation & Configuration
 
 1. Clone the repository (git clone https://github.com/cerndb/hloader.git) 
-2. Install the requirements (*pip install -r requirements.txt*)
+2. Install the requirements (*pip install -r requirements.txt*) and Oracle .rpm files located in /travis-resources
 3. Set up the config.ini (properties starting with *AUTH_* represent the authentication database, while properties starting with *POSTGRE_* represent the meta database)
 4. Run HLoader.py
 
